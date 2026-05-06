@@ -1,410 +1,583 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl" data-theme="dark">
+<html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>لوحة تحليل مبيعات الوفاء V4</title>
+<title>تحليل مبيعات - الوفاء</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&family=Tajawal:wght@300;400;500;700;900&display=swap');
 
-/* ═══════════════════ THEME VARIABLES ═══════════════════ */
-:root,[data-theme="dark"]{
-  --bg:#080d18;--surface:#0f1726;--surface2:#141e30;--surface3:#1a2540;
-  --border:#1e2d45;--border2:#243450;
-  --accent:#00d4ff;--accent2:#7c3aed;--accent3:#10b981;
-  --danger:#ef4444;--warn:#f59e0b;--gold:#fbbf24;
-  --text:#e2e8f0;--text-dim:#64748b;--text-muted:#94a3b8;
-  --shadow:0 0 24px rgba(0,212,255,.05);
-  --header-bg:linear-gradient(135deg,#080d18,#0f1726);
-  --tab-bg:#0f1726;
-  --hover-row:rgba(0,212,255,.025);
-  --card-glow:0 0 24px rgba(0,212,255,.05);
-  --input-bg:#141e30;
-  --r:14px;
+/* ═══════════════════ NEUMORPHISM TOKENS ═══════════════════ */
+:root {
+  --bg:        #1e2330;
+  --surface:   #1e2330;
+  --surface-2: #232a3b;
+
+  --sh-dark:   #131720;
+  --sh-light:  #293148;
+
+  --text:      #cdd6f4;
+  --text-muted:#6c7a99;
+
+  --accent:    #008080;
+  --accent-g:  #00a0a0;
+  --success:   #00A63D;
+  --export:    #FE9900;
+  --danger:    #FF2157;
+  --warn:      #f59e0b;
+  --gold:      #fbbf24;
+  --accent2:   #7c3aed;
+  --val-color: #4ec9b0;
+
+  --border:    #2d3748;
+  --td-border: #2a3044;
+  --th-bg:     #1a2030;
+
+  --nm-raised:    6px 6px 14px var(--sh-dark), -6px -6px 14px var(--sh-light);
+  --nm-inset:     inset 2px 2px 6px var(--sh-dark), inset -2px -2px 6px var(--sh-light);
+  --nm-raised-lg: 12px 12px 28px var(--sh-dark), -12px -12px 28px var(--sh-light);
+  --nm-pressed:   inset 2px 2px 6px var(--sh-dark), inset -2px -2px 6px var(--sh-light);
+
+  --r: 18px;
+  --hover-row: rgba(0,160,160,.05);
 }
-[data-theme="light"]{
-  --bg:#f1f5f9;--surface:#ffffff;--surface2:#f8fafc;--surface3:#e2e8f0;
-  --border:#cbd5e1;--border2:#94a3b8;
-  --accent:#0284c7;--accent2:#7c3aed;--accent3:#059669;
-  --danger:#dc2626;--warn:#d97706;--gold:#b45309;
-  --text:#0f172a;--text-dim:#64748b;--text-muted:#475569;
-  --shadow:0 1px 6px rgba(0,0,0,.08);
-  --header-bg:linear-gradient(135deg,#1e3a5f,#1e40af);
-  --tab-bg:#ffffff;
-  --hover-row:rgba(2,132,199,.04);
-  --card-glow:0 1px 6px rgba(0,0,0,.07);
-  --input-bg:#f8fafc;
+
+body.light {
+  --bg:        #f0f2f5;
+  --surface:   #ffffff;
+  --surface-2: #f5f7fa;
+
+  --sh-dark:   #c8cdd8;
+  --sh-light:  #ffffff;
+
+  --text:      #1a2234;
+  --text-muted:#8a95a8;
+
+  --accent:    #009999;
+  --accent-g:  #00b3b3;
+  --success:   #00A63D;
+  --export:    #FE9900;
+  --danger:    #FF2157;
+  --warn:      #d97706;
+  --gold:      #b45309;
+  --accent2:   #7c3aed;
+  --val-color: #009999;
+
+  --border:    #e4e8ef;
+  --td-border: #edf0f5;
+  --th-bg:     #f8fafc;
+
+  --nm-raised:    4px 4px 12px #c8cdd8, -4px -4px 12px #ffffff;
+  --nm-inset:     inset 2px 2px 5px #c8cdd8, inset -2px -2px 5px #ffffff;
+  --nm-raised-lg: 10px 10px 24px #c0c5d0, -10px -10px 24px #ffffff;
+  --nm-pressed:   inset 2px 2px 5px #c8cdd8, inset -2px -2px 5px #ffffff;
+
+  --hover-row: rgba(0,153,153,.04);
 }
 
-.cov-subtab{flex:1;padding:11px 18px;background:none;border:none;color:var(--text-dim);cursor:pointer;font-family:'Cairo',sans-serif;font-size:12px;font-weight:600;transition:all .2s;border-bottom:3px solid transparent;}
-.cov-subtab:hover{color:var(--text);background:var(--surface3);}
-.cov-subtab-on{color:#0891b2;border-bottom-color:#0891b2 !important;background:var(--surface) !important;}
-.cov-sec-btn{padding:8px 16px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-dim);cursor:pointer;font-family:'Cairo',sans-serif;font-size:11px;font-weight:600;white-space:nowrap;transition:all .2s;}
-.cov-sec-btn:hover{color:var(--text);}
-.cov-sec-btn.on{color:#0891b2;border-bottom-color:#0891b2;}
-.cov-tbl{width:100%;border-collapse:collapse;font-size:12px;}
-.cov-tbl th{background:var(--surface2);color:var(--text-muted);padding:8px 10px;text-align:right;font-weight:600;border-bottom:2px solid var(--border);white-space:nowrap;}
-.cov-tbl td{padding:7px 10px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:middle;}
-.cov-tbl tr:hover td{background:var(--hover-row);}
-.cov-pill{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;}
-.cov-high{background:rgba(16,185,129,.15);color:#10b981;}
-.cov-mid{background:rgba(245,158,11,.15);color:#f59e0b;}
-.cov-low{background:rgba(239,68,68,.15);color:#ef4444;}
-.cov-mbar-bg{background:var(--surface3);border-radius:3px;height:8px;overflow:hidden;min-width:60px;flex:1;}
-.cov-mbar-fill{height:100%;border-radius:3px;}
-.cov-rank{display:inline-flex;width:22px;height:22px;border-radius:50%;align-items:center;justify-content:center;font-size:10px;font-weight:700;}
-.cov-r1{background:#854d0e;color:#fef08a;}
-.cov-r2{background:#374151;color:#e2e8f0;}
-.cov-r3{background:#7c2d12;color:#fed7aa;}
-.cov-rn{background:var(--surface2);color:var(--text-dim);border:1px solid var(--border);}
+/* ═══════════════════ BASE ═══════════════════ */
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;direction:rtl;transition:background .3s,color .3s;}
 
-body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;direction:rtl;transition:background .25s,color .25s;}
-
-/* ═══ HEADER ═══ */
-.header{background:var(--header-bg);border-bottom:1px solid var(--border);padding:13px 26px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:300;backdrop-filter:blur(14px);}
-.hbrand{display:flex;align-items:center;gap:11px;}
-.hicon{width:36px;height:36px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
-.header h1{font-size:16px;font-weight:700;white-space:nowrap;}
-[data-theme="dark"] .header h1{background:linear-gradient(90deg,var(--accent),#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
-[data-theme="light"] .header h1{color:#fff;}
-.hsub{font-size:10px;color:rgba(255,255,255,.6);font-weight:300;}
-[data-theme="light"] .hsub{color:rgba(255,255,255,.7);}
-.hright{display:flex;align-items:center;gap:8px;}
-.spill{display:flex;align-items:center;gap:5px;background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.3);color:var(--accent3);padding:4px 11px;border-radius:20px;font-size:11px;font-weight:600;}
-.sdot{width:6px;height:6px;border-radius:50%;background:var(--accent3);animation:pulse 2s infinite;}
-@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
-
-/* Theme toggle */
-.theme-btn{width:36px;height:36px;border-radius:9px;border:1px solid var(--border);background:var(--surface2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;transition:all .2s;}
-.theme-btn:hover{border-color:var(--accent);}
-
-/* ═══ TABS ═══ */
-.tabs{background:var(--tab-bg);border-bottom:1px solid var(--border);padding:0 22px;display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;}
-.tabs::-webkit-scrollbar{display:none;}
-.tb{padding:11px 18px;background:none;border:none;color:var(--text-dim);cursor:pointer;font-family:'Cairo',sans-serif;font-size:12px;font-weight:600;border-bottom:3px solid transparent;transition:all .2s;display:flex;align-items:center;gap:6px;white-space:nowrap;position:relative;top:1px;}
-.tb:hover{color:var(--text);}
-.tb.on{color:var(--accent);border-bottom-color:var(--accent);}
-.tbadge{font-size:9px;font-weight:700;padding:1px 5px;border-radius:8px;background:var(--accent2);color:#fff;}
-.tbadge.g{background:var(--accent3);}
-.tbadge.r{background:var(--danger);}
-
-/* ═══ CONTENT ═══ */
-.content{padding:20px 26px;max-width:1800px;margin:0 auto;}
-.pane{display:none;animation:fi .2s ease;}
-.pane.on{display:block;}
-@keyframes fi{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
-
-/* ═══ CARD ═══ */
-.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px;box-shadow:var(--card-glow);}
-.ctitle{font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:13px;display:flex;align-items:center;gap:7px;}
-.ctitle::before{content:'';width:3px;height:12px;background:var(--accent);border-radius:2px;flex-shrink:0;}
-
-/* ═══ GRIDS ═══ */
-.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
-.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
-
-/* ═══ ALERTS ═══ */
-.al{padding:9px 13px;border-radius:8px;font-size:12px;font-weight:600;display:flex;align-items:center;gap:8px;margin-bottom:13px;}
-.al-i{background:rgba(0,212,255,.08);border:1px solid rgba(0,212,255,.2);color:var(--accent);}
-.al-g{background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.25);color:var(--accent3);}
-.al-w{background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);color:var(--warn);}
-[data-theme="light"] .al-i{background:rgba(2,132,199,.07);border-color:rgba(2,132,199,.25);color:#0369a1;}
-[data-theme="light"] .al-g{background:rgba(5,150,105,.07);border-color:rgba(5,150,105,.25);color:#065f46;}
-[data-theme="light"] .al-w{background:rgba(217,119,6,.07);border-color:rgba(217,119,6,.25);color:#92400e;}
-
-/* ═══ BUTTONS ═══ */
-.btn{background:linear-gradient(135deg,var(--accent),#0099bb);color:#fff;border:none;padding:7px 16px;border-radius:8px;font-family:'Cairo',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:5px;}
-[data-theme="light"] .btn{color:#fff;}
-.btn:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(0,150,200,.35);}
-.btn:disabled{opacity:.4;cursor:not-allowed;transform:none;box-shadow:none;}
-.btn-g{background:linear-gradient(135deg,var(--accent3),#047857);color:#fff;}
-.btn-g:hover{box-shadow:0 4px 14px rgba(5,150,105,.35);}
-.btn-r{background:linear-gradient(135deg,var(--danger),#b91c1c);color:#fff;}
-.btn-r:hover{box-shadow:0 4px 14px rgba(220,38,38,.35);}
-.btn-gh{background:var(--surface2);color:var(--text);border:1px solid var(--border);}
-.btn-gh:hover{border-color:var(--accent);box-shadow:none;transform:none;}
-.btn-sm{padding:5px 12px;font-size:11px;}
-
-/* ═══ UPLOAD ZONE ═══ */
-.upzone{border:2px dashed var(--border);border-radius:10px;padding:22px 16px;text-align:center;cursor:pointer;transition:all .25s;position:relative;}
-.upzone:hover,.upzone.drag{border-color:var(--accent);background:rgba(0,212,255,.04);}
-[data-theme="light"] .upzone:hover{background:rgba(2,132,199,.04);}
-.upzone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
-.upico{font-size:28px;margin-bottom:7px;}
-.uplbl{font-size:12px;color:var(--text-muted);margin-bottom:3px;}
-.uphint{font-size:10px;color:var(--text-dim);}
-.upok{display:flex;align-items:center;gap:7px;background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.3);border-radius:7px;padding:7px 12px;margin-top:9px;color:var(--accent3);font-size:11px;font-weight:600;}
-.uperr{display:flex;align-items:center;gap:7px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:7px;padding:7px 12px;margin-top:9px;color:var(--danger);font-size:11px;font-weight:600;}
-[data-theme="light"] .upok{background:rgba(5,150,105,.07);border-color:rgba(5,150,105,.3);color:#065f46;}
-[data-theme="light"] .uperr{background:rgba(220,38,38,.07);border-color:rgba(220,38,38,.3);color:#991b1b;}
-
-/* ═══ STAT CARDS ═══ */
-.sr{display:grid;grid-template-columns:repeat(auto-fit,minmax(135px,1fr));gap:10px;margin-bottom:16px;}
-.sc{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px;position:relative;overflow:hidden;}
-.sc::before{content:'';position:absolute;top:-14px;right:-14px;width:46px;height:46px;border-radius:50%;opacity:.07;}
-.sc.bl::before{background:var(--accent);}
-.sc.gn::before{background:var(--accent3);}
-.sc.pu::before{background:var(--accent2);}
-.sc.ye::before{background:var(--warn);}
-.sc.re::before{background:var(--danger);}
-.sv{font-size:21px;font-weight:900;font-family:'Tajawal',sans-serif;line-height:1;}
-.sc.bl .sv{color:var(--accent);}
-.sc.gn .sv{color:var(--accent3);}
-.sc.pu .sv{color:var(--accent2);}
-.sc.ye .sv{color:var(--warn);}
-.sc.re .sv{color:var(--danger);}
-.sl{font-size:9px;color:var(--text-dim);margin-top:4px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;}
-
-/* ═══ TABLE ═══ */
-.tw{overflow-x:auto;border-radius:9px;border:1px solid var(--border);}
-table{width:100%;border-collapse:collapse;font-size:12px;}
-thead tr{background:var(--surface2);}
-thead th{padding:9px 12px;text-align:right;font-size:10px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border);white-space:nowrap;}
-tbody tr{border-bottom:1px solid rgba(100,116,139,.15);transition:background .12s;}
-tbody tr:last-child{border-bottom:none;}
-tbody tr:hover{background:var(--hover-row);}
-td{padding:8px 12px;font-size:12px;}
-td.n{font-family:'Tajawal',sans-serif;font-weight:600;}
-[data-theme="light"] thead tr{background:#f1f5f9;}
-[data-theme="light"] thead th{color:#64748b;}
-
-/* ═══ PROGRESS ═══ */
-.pw{display:flex;align-items:center;gap:7px;}
-.pbg{flex:1;height:5px;background:var(--border);border-radius:10px;overflow:hidden;}
-[data-theme="light"] .pbg{background:#e2e8f0;}
-.pf{height:100%;border-radius:10px;transition:width .5s ease;}
-.pp{font-size:11px;font-weight:700;min-width:40px;text-align:left;font-family:'Tajawal';}
-
-/* ═══ CHARTS ═══ */
-.cg{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:16px;}
-.cc{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px;}
-.ct{font-size:11px;font-weight:700;color:var(--text-muted);margin-bottom:10px;}
-.chw{position:relative;height:230px;}
-
-/* ═══ RUN RATE ═══ */
-.rrs{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:16px;}
-.rrt{font-size:11px;font-weight:700;color:var(--text-muted);margin-bottom:10px;display:flex;align-items:center;gap:6px;}
-.rrg{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:9px;}
-.rrc{background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:11px;}
-.rrl{font-size:9px;color:var(--text-dim);font-weight:600;text-transform:uppercase;margin-bottom:3px;}
-.rrv{font-size:18px;font-weight:900;font-family:'Tajawal';color:var(--accent);line-height:1;}
-.rrs2{font-size:9px;color:var(--text-dim);margin-top:2px;}
-.rrbadge{display:inline-flex;align-items:center;gap:3px;font-size:9px;font-weight:700;padding:2px 6px;border-radius:6px;margin-top:4px;}
-.rrbadge.good{background:rgba(16,185,129,.15);color:var(--accent3);}
-.rrbadge.bad{background:rgba(239,68,68,.15);color:var(--danger);}
-.rrbadge.warn{background:rgba(245,158,11,.15);color:var(--warn);}
-[data-theme="light"] .rrbadge.good{background:rgba(5,150,105,.1);}
-[data-theme="light"] .rrbadge.bad{background:rgba(220,38,38,.1);}
-[data-theme="light"] .rrbadge.warn{background:rgba(217,119,6,.1);}
-
-/* ═══ DAY BAR ═══ */
-.dbar{display:flex;align-items:center;gap:9px;margin-bottom:12px;flex-wrap:wrap;}
-.dinp{background:var(--input-bg);border:1px solid var(--border);color:var(--text);padding:5px 9px;border-radius:7px;font-family:'Cairo',sans-serif;font-size:12px;width:65px;outline:none;text-align:center;}
-.dinp:focus{border-color:var(--accent);}
-.msel{background:var(--input-bg);border:1px solid var(--border);color:var(--text);padding:5px 9px;border-radius:7px;font-family:'Cairo',sans-serif;font-size:11px;outline:none;cursor:pointer;}
-.msel:focus{border-color:var(--accent);}
-.dlabel{font-size:11px;color:var(--text-muted);font-weight:600;}
-
-/* ═══ REP BUTTONS ═══ */
-.repsel{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;}
-.rb{padding:6px 15px;border-radius:20px;border:1.5px solid var(--border);background:var(--surface2);color:var(--text-muted);font-family:'Cairo',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;}
-.rb:hover{border-color:var(--accent);color:var(--text);}
-.rb.on{background:linear-gradient(135deg,var(--accent),#0099bb);border-color:var(--accent);color:#fff;box-shadow:0 3px 10px rgba(0,150,200,.3);}
-.rb.allbtn{border-color:var(--accent2);color:var(--accent2);}
-.rb.allbtn.on{background:linear-gradient(135deg,var(--accent2),#5b21b6);border-color:var(--accent2);color:#fff;}
-
-/* ═══ NPS ═══ */
-.npsgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(185px,1fr));gap:11px;margin-bottom:18px;}
-.npsc{border-radius:12px;padding:15px;border:1.5px solid transparent;}
-.npsc.gn{background:rgba(16,185,129,.07);border-color:rgba(16,185,129,.28);}
-.npsc.ye{background:rgba(245,158,11,.07);border-color:rgba(245,158,11,.28);}
-.npsc.re{background:rgba(239,68,68,.07);border-color:rgba(239,68,68,.28);}
-[data-theme="light"] .npsc.gn{background:rgba(5,150,105,.06);border-color:rgba(5,150,105,.35);}
-[data-theme="light"] .npsc.ye{background:rgba(217,119,6,.06);border-color:rgba(217,119,6,.35);}
-[data-theme="light"] .npsc.re{background:rgba(220,38,38,.06);border-color:rgba(220,38,38,.35);}
-.npsname{font-size:12px;font-weight:700;margin-bottom:7px;display:flex;justify-content:space-between;align-items:center;}
-.npspct{font-size:22px;font-weight:900;font-family:'Tajawal';margin:5px 0;}
-.npspct.gn{color:var(--accent3);}
-.npspct.ye{color:var(--warn);}
-.npspct.re{color:var(--danger);}
-.npsrow{display:flex;justify-content:space-between;font-size:10px;margin-top:3px;}
-.npslbl{color:var(--text-dim);}
-.npsval{font-family:'Tajawal';font-weight:700;}
-.npstg{font-size:9px;margin-top:6px;padding:3px 7px;background:rgba(0,0,0,.15);border-radius:5px;color:var(--text-muted);}
-[data-theme="light"] .npstg{background:rgba(0,0,0,.05);}
-
-.npstotal{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 16px;display:flex;align-items:center;flex-wrap:wrap;gap:14px;margin-bottom:15px;}
-.ntitem{text-align:center;padding:0 8px;}
-.ntv{font-size:19px;font-weight:900;font-family:'Tajawal';color:var(--accent);}
-.ntl{font-size:9px;color:var(--text-dim);text-transform:uppercase;font-weight:600;}
-.nt-div{width:1px;height:32px;background:var(--border);}
-
-/* ═══ LEADERBOARD ═══ */
-.lb{display:flex;flex-direction:column;gap:6px;}
-.lbr{display:flex;align-items:center;gap:9px;padding:8px 11px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);transition:all .17s;}
-.lbr:hover{border-color:var(--accent);transform:translateX(-2px);}
-.lbrank{font-size:16px;font-weight:900;font-family:'Tajawal';min-width:24px;text-align:center;}
-.lbrank.gold{color:var(--gold);}
-.lbrank.silver{color:#94a3b8;}
-.lbrank.bronze{color:#cd7c3a;}
-.lbname{flex:1;font-size:12px;font-weight:600;}
-.lbval{font-size:11px;color:var(--text-dim);}
-.lbpct{font-size:14px;font-weight:900;font-family:'Tajawal';}
-
-/* ═══ GAP CHART ═══ */
-.gapwrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:16px;}
-
-/* ═══ DIV BAR ═══ */
-.divb{display:flex;align-items:center;gap:6px;}
-.divbg{flex:1;height:6px;background:var(--border);border-radius:10px;overflow:hidden;}
-[data-theme="light"] .divbg{background:#e2e8f0;}
-.divf{height:100%;border-radius:10px;background:linear-gradient(90deg,var(--accent3),var(--accent));}
-
-/* ═══ SAVEBAR ═══ */
-.savebar{display:flex;gap:7px;margin-bottom:13px;flex-wrap:wrap;align-items:center;}
-
-/* ═══ SPINNER ═══ */
-.spin{display:inline-block;width:13px;height:13px;border:2px solid rgba(0,212,255,.2);border-top-color:var(--accent);border-radius:50%;animation:sp .7s linear infinite;}
-@keyframes sp{to{transform:rotate(360deg);}}
-
-/* ═══ SCROLLBAR ═══ */
-::-webkit-scrollbar{width:4px;height:4px;}
-::-webkit-scrollbar-track{background:transparent;}
-::-webkit-scrollbar-thumb{background:var(--border);border-radius:10px;}
-
-/* ═══ TOAST ═══ */
-.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--surface);border:1px solid var(--border2);color:var(--text);padding:9px 20px;border-radius:12px;font-family:Cairo;font-size:12px;font-weight:600;z-index:9999;box-shadow:0 6px 24px rgba(0,0,0,.35);animation:fi .3s ease;}
-
-/* ═══ SAVED PLANS BADGE ═══ */
-.plans-saved-badge{display:inline-flex;align-items:center;gap:5px;background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.25);color:var(--accent3);padding:3px 10px;border-radius:10px;font-size:10px;font-weight:600;}
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:var(--surface);}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:6px;}
+::-webkit-scrollbar-thumb:hover{background:var(--accent);}
 
 /* ═══════════════════ LOGIN SCREEN ═══════════════════ */
 #login-screen{
   position:fixed;inset:0;z-index:9999;
   display:flex;align-items:center;justify-content:center;
-  transition:background .25s;
+  background:var(--bg);transition:background .3s,opacity .4s;
 }
-[data-theme="dark"] #login-screen { background:#080d18; }
-[data-theme="light"] #login-screen { background:#dde6f0; }
 
 .login-card{
-  width:340px;padding:48px 36px;border-radius:28px;text-align:center;
-  transition:all .25s;
+  width:360px;padding:52px 40px;border-radius:32px;text-align:center;
+  background:var(--surface);
+  box-shadow:var(--nm-raised-lg);
+  transition:all .3s;
 }
-[data-theme="dark"] .login-card{
-  background:#0f1726;
-  box-shadow:12px 12px 30px #04080f, -8px -8px 20px #1a2b44;
-  border:1px solid #1e2d45;
-}
-[data-theme="light"] .login-card{
-  background:#dde6f0;
-  box-shadow:14px 14px 36px #b8c2ce, -10px -10px 28px #ffffff;
-  border:none;
+body.light .login-card{
+  background:#ffffff;
+  box-shadow:0 8px 32px rgba(0,0,0,.1);
 }
 
-.login-logo{
-  font-size:2.4rem;margin-bottom:6px;
-  filter:drop-shadow(0 0 12px rgba(0,212,255,.35));
-}
-.login-title{
-  font-size:1.25rem;font-weight:700;margin-bottom:4px;
-}
-[data-theme="dark"] .login-title{ color:#e2e8f0; }
-[data-theme="light"] .login-title{ color:#334155; }
-
-.login-sub{font-size:11px;margin-bottom:28px;}
-[data-theme="dark"] .login-sub{ color:#475569; }
-[data-theme="light"] .login-sub{ color:#94a3b8; }
+.login-logo{font-size:2.6rem;margin-bottom:8px;filter:drop-shadow(0 0 14px rgba(0,160,160,.4));}
+.login-title{font-size:1.3rem;font-weight:700;margin-bottom:4px;color:var(--accent-g);}
+.login-sub{font-size:11px;color:var(--text-muted);margin-bottom:32px;}
 
 .login-input{
-  width:100%;padding:13px 18px;margin-bottom:14px;
+  width:100%;padding:14px 18px;margin-bottom:14px;
   border:none;outline:none;border-radius:16px;
-  font-family:'Cairo',sans-serif;font-size:13px;
-  box-sizing:border-box;transition:box-shadow .2s;
-  display:block;
+  font-family:'Cairo',sans-serif;font-size:13px;color:var(--text);
+  background:var(--surface);
+  box-shadow:var(--nm-inset);
+  transition:box-shadow .2s;display:block;
 }
-[data-theme="dark"] .login-input{
-  background:#0f1726;color:#e2e8f0;
-  box-shadow:inset 5px 5px 12px #04080f, inset -5px -5px 12px #1a2b44;
+body.light .login-input{
+  background:#f5f7fa;
+  box-shadow:inset 2px 2px 6px #d0d5df, inset -2px -2px 6px #fff;
+  border:1px solid #e8edf5;
 }
-[data-theme="dark"] .login-input:focus{
-  box-shadow:inset 5px 5px 12px #04080f, inset -5px -5px 12px #1a2b44,0 0 0 2px rgba(0,212,255,.3);
-}
-[data-theme="light"] .login-input{
-  background:#dde6f0;color:#334155;
-  box-shadow:inset 6px 6px 14px #b8c2ce, inset -6px -6px 14px #ffffff;
-}
-[data-theme="light"] .login-input:focus{
-  box-shadow:inset 6px 6px 14px #b8c2ce, inset -6px -6px 14px #ffffff,0 0 0 2px rgba(2,132,199,.3);
-}
-.login-input::placeholder{color:#64748b;}
+.login-input:focus{box-shadow:var(--nm-pressed),0 0 0 2px rgba(0,160,160,.25);}
+body.light .login-input:focus{box-shadow:inset 2px 2px 6px #d0d5df,inset -2px -2px 6px #fff,0 0 0 2px rgba(0,153,153,.25);}
+.login-input::placeholder{color:var(--text-muted);}
 
 .login-btn{
-  width:100%;padding:13px;margin-top:6px;
+  width:100%;padding:14px;margin-top:8px;
   border:none;border-radius:16px;
   font-family:'Cairo',sans-serif;font-size:14px;font-weight:700;
-  cursor:pointer;transition:all .3s;letter-spacing:.3px;
+  cursor:pointer;transition:all .25s;letter-spacing:.4px;
+  background:var(--surface);color:var(--accent-g);
+  box-shadow:var(--nm-raised);
 }
-[data-theme="dark"] .login-btn{
-  background:#0f1726;
-  color:#94a3b8;
-  box-shadow:6px 6px 14px #04080f, -6px -6px 14px #1a2b44;
-}
-[data-theme="dark"] .login-btn:hover{
-  color:#e2e8f0;
-  box-shadow:8px 8px 18px #04080f, -8px -8px 18px #1a2b44;
-}
-[data-theme="dark"] .login-btn:active{
-  box-shadow:inset 4px 4px 10px #04080f, inset -4px -4px 10px #1a2b44;
-  transform:scale(.98);
-}
-[data-theme="light"] .login-btn{
-  background:#dde6f0;
-  color:#4c5563;
-  box-shadow:6px 6px 14px #b8c2ce, -6px -6px 14px #ffffff;
-}
-[data-theme="light"] .login-btn:hover{
-  color:#334155;
-  box-shadow:8px 8px 18px #b0bbc8, -8px -8px 18px #ffffff;
-}
-[data-theme="light"] .login-btn:active{
-  box-shadow:inset 5px 5px 10px #b8c2ce, inset -5px -5px 10px #ffffff;
-  transform:scale(.98);
-}
+.login-btn:hover{color:var(--text);box-shadow:8px 8px 18px var(--sh-dark),-8px -8px 18px var(--sh-light);}
+.login-btn:active{box-shadow:var(--nm-pressed);transform:scale(.98);}
+body.light .login-btn{background:#009999;color:#fff;box-shadow:0 4px 16px rgba(0,153,153,.3);}
+body.light .login-btn:hover{background:#00b3b3;box-shadow:0 6px 20px rgba(0,153,153,.45);}
 
-.login-err{
-  color:#ef4444;font-size:12px;margin-top:14px;
-  min-height:18px;transition:opacity .2s;
-  opacity:0;font-weight:600;
-}
-.login-err.show{ opacity:1; }
+.login-err{color:#FF2157;font-size:12px;margin-top:14px;min-height:18px;opacity:0;transition:opacity .2s;font-weight:600;}
+.login-err.show{opacity:1;}
 
-.login-theme-row{
-  display:flex;justify-content:center;margin-top:22px;
-}
+.login-theme-row{display:flex;justify-content:center;margin-top:24px;}
 .login-theme-btn{
-  background:none;border:none;cursor:pointer;
-  font-size:18px;padding:6px 10px;border-radius:10px;
-  transition:all .2s;
+  background:none;border:none;cursor:pointer;font-size:18px;
+  padding:7px 12px;border-radius:12px;color:var(--text-muted);transition:all .2s;
 }
-[data-theme="dark"] .login-theme-btn:hover{ background:rgba(255,255,255,.07); }
-[data-theme="light"] .login-theme-btn:hover{ background:rgba(0,0,0,.07); }
+.login-theme-btn:hover{background:rgba(0,160,160,.1);color:var(--accent-g);}
 
-/* slide-up animation for app reveal */
+/* ═══════════════════ HEADER ═══════════════════ */
+.header{
+  background:var(--surface);
+  border-bottom:1px solid var(--border);
+  padding:14px 28px;
+  display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:300;
+  box-shadow:0 4px 16px rgba(0,0,0,.25);
+}
+body.light .header{box-shadow:0 2px 12px rgba(0,0,0,.08);}
+
+.hbrand{display:flex;align-items:center;gap:13px;}
+.hicon{
+  width:40px;height:40px;border-radius:12px;
+  display:flex;align-items:center;justify-content:center;font-size:18px;
+  background:var(--surface);box-shadow:var(--nm-raised);
+  color:var(--accent-g);
+}
+body.light .hicon{background:#f0f2f5;box-shadow:3px 3px 8px #c8cdd8,-3px -3px 8px #fff;}
+
+.header h1{font-size:15px;font-weight:700;color:var(--accent-g);white-space:nowrap;}
+.hsub{font-size:10px;color:var(--text-muted);font-weight:400;margin-top:1px;}
+
+.hright{display:flex;align-items:center;gap:10px;}
+.spill{
+  display:flex;align-items:center;gap:6px;
+  background:rgba(0,166,61,.1);border:1px solid rgba(0,166,61,.3);
+  color:var(--success);padding:5px 13px;border-radius:20px;font-size:11px;font-weight:600;
+}
+.sdot{width:6px;height:6px;border-radius:50%;background:var(--success);animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+
+.theme-btn{
+  width:38px;height:38px;border-radius:12px;border:none;
+  background:var(--surface);box-shadow:var(--nm-raised);
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  font-size:16px;color:var(--text-muted);transition:all .2s;
+}
+.theme-btn:hover{color:var(--accent-g);box-shadow:var(--nm-pressed);}
+body.light .theme-btn{background:#f0f2f5;box-shadow:3px 3px 8px #c8cdd8,-3px -3px 8px #fff;}
+
+/* ═══════════════════ TABS ═══════════════════ */
+.tabs{
+  background:var(--surface);
+  border-bottom:1px solid var(--border);
+  padding:0 24px;display:flex;gap:2px;
+  overflow-x:auto;scrollbar-width:none;
+}
+.tabs::-webkit-scrollbar{display:none;}
+
+.tb{
+  padding:13px 20px;background:none;border:none;
+  color:var(--text-muted);cursor:pointer;
+  font-family:'Cairo',sans-serif;font-size:12px;font-weight:600;
+  border-bottom:3px solid transparent;
+  transition:all .2s;display:flex;align-items:center;gap:7px;
+  white-space:nowrap;position:relative;top:1px;
+}
+.tb:hover{color:var(--text);}
+.tb.on{color:var(--accent-g);border-bottom-color:var(--accent-g);}
+
+.tbadge{font-size:9px;font-weight:700;padding:2px 6px;border-radius:8px;background:var(--accent2);color:#fff;}
+.tbadge.g{background:var(--success);}
+.tbadge.r{background:var(--danger);}
+.tbadge.c{background:var(--accent);}
+
+/* ═══════════════════ CONTENT ═══════════════════ */
+.content{padding:22px 28px;max-width:1800px;margin:0 auto;}
+.pane{display:none;animation:fi .22s ease;}
+.pane.on{display:block;}
+@keyframes fi{from{opacity:0;transform:translateY(5px);}to{opacity:1;transform:translateY(0);}}
+
+/* ═══════════════════ CARDS ═══════════════════ */
+.card{
+  background:var(--surface);border-radius:var(--r);
+  padding:20px;margin-bottom:14px;
+  box-shadow:var(--nm-raised);
+}
+body.light .card{
+  background:#ffffff;
+  box-shadow:0 2px 12px rgba(0,0,0,.07),0 1px 3px rgba(0,0,0,.05);
+  border:1px solid #edf0f5;
+}
+
+.ctitle{
+  font-size:11px;font-weight:700;color:var(--text-muted);
+  text-transform:uppercase;letter-spacing:.8px;
+  margin-bottom:14px;display:flex;align-items:center;gap:8px;
+}
+.ctitle::before{content:'';width:3px;height:13px;background:var(--accent-g);border-radius:2px;flex-shrink:0;}
+
+/* ═══════════════════ GRIDS ═══════════════════ */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+
+/* ═══════════════════ ALERTS ═══════════════════ */
+.al{
+  padding:10px 15px;border-radius:12px;font-size:12px;font-weight:600;
+  display:flex;align-items:center;gap:9px;margin-bottom:14px;
+  box-shadow:var(--nm-inset);
+}
+body.light .al{box-shadow:none;border:1px solid;}
+.al-i{background:rgba(0,160,160,.08);color:var(--accent-g);}
+body.light .al-i{background:rgba(0,153,153,.07);border-color:rgba(0,153,153,.3);color:#007a7a;}
+.al-g{background:rgba(0,166,61,.08);color:var(--success);}
+body.light .al-g{background:rgba(0,166,61,.07);border-color:rgba(0,166,61,.3);color:#005c22;}
+.al-w{background:rgba(245,158,11,.08);color:var(--warn);}
+body.light .al-w{background:rgba(245,158,11,.07);border-color:rgba(245,158,11,.3);color:#92400e;}
+
+/* ═══════════════════ BUTTONS ═══════════════════ */
+.btn{
+  background:var(--accent);color:#fff;border:none;
+  padding:8px 18px;border-radius:12px;
+  font-family:'Cairo',sans-serif;font-size:12px;font-weight:700;
+  cursor:pointer;transition:all .2s;
+  display:inline-flex;align-items:center;gap:6px;
+  box-shadow:0 4px 14px rgba(0,128,128,.35);
+}
+.btn:hover{background:var(--accent-g);transform:translateY(-1px);box-shadow:0 6px 18px rgba(0,160,160,.4);}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none;box-shadow:none;}
+
+.btn-g{background:var(--success);box-shadow:0 4px 14px rgba(0,166,61,.35);}
+.btn-g:hover{background:#00c247;box-shadow:0 6px 18px rgba(0,166,61,.4);}
+.btn-r{background:var(--danger);box-shadow:0 4px 14px rgba(255,33,87,.3);}
+.btn-r:hover{box-shadow:0 6px 18px rgba(255,33,87,.4);}
+
+.btn-gh{
+  background:var(--surface);color:var(--text);border:none;
+  box-shadow:var(--nm-raised);
+}
+.btn-gh:hover{color:var(--accent-g);box-shadow:var(--nm-pressed);}
+body.light .btn-gh{background:#f0f2f5;box-shadow:3px 3px 8px #c8cdd8,-3px -3px 8px #fff;border:none;}
+
+.btn-sm{padding:6px 13px;font-size:11px;}
+
+/* ═══════════════════ UPLOAD ZONE ═══════════════════ */
+.upzone{
+  border:2px dashed var(--border);border-radius:14px;
+  padding:24px 18px;text-align:center;cursor:pointer;
+  transition:all .25s;position:relative;
+  background:var(--surface);box-shadow:var(--nm-inset);
+}
+body.light .upzone{background:#f5f7fa;box-shadow:inset 2px 2px 6px #d0d5df,inset -2px -2px 6px #fff;border:2px dashed #c8cdd8;}
+.upzone:hover,.upzone.drag{border-color:var(--accent-g);box-shadow:var(--nm-pressed),0 0 0 1px rgba(0,160,160,.2);}
+.upzone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.upico{font-size:30px;margin-bottom:8px;}
+.uplbl{font-size:12px;color:var(--text-muted);margin-bottom:4px;}
+.uphint{font-size:10px;color:var(--text-muted);opacity:.6;}
+
+.upok{
+  display:flex;align-items:center;gap:8px;
+  background:rgba(0,166,61,.1);border:1px solid rgba(0,166,61,.3);
+  border-radius:10px;padding:8px 13px;margin-top:10px;
+  color:var(--success);font-size:11px;font-weight:600;
+}
+.uperr{
+  display:flex;align-items:center;gap:8px;
+  background:rgba(255,33,87,.1);border:1px solid rgba(255,33,87,.3);
+  border-radius:10px;padding:8px 13px;margin-top:10px;
+  color:var(--danger);font-size:11px;font-weight:600;
+}
+
+/* ═══════════════════ STAT CARDS ═══════════════════ */
+.sr{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:18px;}
+.sc{
+  background:var(--surface);border-radius:16px;padding:16px;
+  position:relative;overflow:hidden;
+  box-shadow:var(--nm-raised);
+}
+body.light .sc{background:#fff;box-shadow:0 2px 12px rgba(0,0,0,.07),0 1px 3px rgba(0,0,0,.04);border:1px solid #edf0f5;}
+.sc::before{content:'';position:absolute;top:-16px;right:-16px;width:50px;height:50px;border-radius:50%;opacity:.08;}
+.sc.bl::before{background:var(--accent-g);}
+.sc.gn::before{background:var(--success);}
+.sc.pu::before{background:var(--accent2);}
+.sc.ye::before{background:var(--warn);}
+.sc.re::before{background:var(--danger);}
+.sv{font-size:22px;font-weight:900;font-family:'Tajawal',sans-serif;line-height:1;}
+.sc.bl .sv{color:var(--accent-g);}
+.sc.gn .sv{color:var(--success);}
+.sc.pu .sv{color:var(--accent2);}
+.sc.ye .sv{color:var(--warn);}
+.sc.re .sv{color:var(--danger);}
+.sl{font-size:9px;color:var(--text-muted);margin-top:5px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;}
+
+/* ═══════════════════ TABLE ═══════════════════ */
+.tw{overflow-x:auto;border-radius:14px;box-shadow:var(--nm-raised);}
+body.light .tw{box-shadow:0 2px 12px rgba(0,0,0,.07);border:1px solid #edf0f5;}
+table{width:100%;border-collapse:collapse;font-size:12px;}
+thead tr{background:var(--th-bg);}
+thead th{
+  padding:10px 12px;text-align:right;font-size:10px;font-weight:700;
+  color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;
+  border-bottom:1px solid var(--td-border);white-space:nowrap;
+}
+tbody tr{border-bottom:1px solid var(--td-border);transition:background .12s;}
+tbody tr:last-child{border-bottom:none;}
+tbody tr:hover{background:var(--hover-row);}
+td{padding:9px 12px;font-size:12px;color:var(--text);}
+td.n{font-family:'Tajawal',sans-serif;font-weight:600;}
+
+/* ═══════════════════ PROGRESS ═══════════════════ */
+.pw{display:flex;align-items:center;gap:8px;}
+.pbg{flex:1;height:5px;background:var(--sh-dark);border-radius:10px;overflow:hidden;}
+body.light .pbg{background:#e4e8ef;}
+.pf{height:100%;border-radius:10px;transition:width .5s ease;}
+.pp{font-size:11px;font-weight:700;min-width:40px;text-align:left;font-family:'Tajawal';}
+
+/* ═══════════════════ CHARTS ═══════════════════ */
+.cg{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:16px;}
+.cc{
+  background:var(--surface);border-radius:var(--r);padding:18px;
+  box-shadow:var(--nm-raised);
+}
+body.light .cc{background:#fff;box-shadow:0 2px 12px rgba(0,0,0,.07);border:1px solid #edf0f5;}
+.ct{font-size:11px;font-weight:700;color:var(--text-muted);margin-bottom:12px;}
+.chw{position:relative;height:230px;}
+
+/* ═══════════════════ RUN RATE ═══════════════════ */
+.rrs{
+  background:var(--surface);border-radius:var(--r);
+  padding:18px;margin-bottom:18px;
+  box-shadow:var(--nm-raised);
+}
+body.light .rrs{background:#fff;box-shadow:0 2px 12px rgba(0,0,0,.07);border:1px solid #edf0f5;}
+.rrt{font-size:11px;font-weight:700;color:var(--text-muted);margin-bottom:12px;display:flex;align-items:center;gap:7px;}
+.rrg{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:10px;}
+.rrc{
+  background:var(--surface-2);border-radius:14px;padding:13px;
+  box-shadow:inset 2px 2px 5px var(--sh-dark), inset -2px -2px 5px var(--sh-light);
+  border:none;
+}
+body.light .rrc{background:#f5f7fa;box-shadow:inset 1px 1px 4px #d0d5df,inset -1px -1px 4px #fff;border:1px solid #edf0f5;}
+.rrl{font-size:9px;color:var(--text-muted);font-weight:600;text-transform:uppercase;margin-bottom:4px;}
+.rrv{font-size:18px;font-weight:900;font-family:'Tajawal';color:var(--accent-g);line-height:1;}
+.rrs2{font-size:9px;color:var(--text-muted);margin-top:3px;}
+.rrbadge{display:inline-flex;align-items:center;gap:3px;font-size:9px;font-weight:700;padding:2px 7px;border-radius:6px;margin-top:5px;}
+.rrbadge.good{background:rgba(0,166,61,.15);color:var(--success);}
+.rrbadge.bad{background:rgba(255,33,87,.15);color:var(--danger);}
+.rrbadge.warn{background:rgba(245,158,11,.15);color:var(--warn);}
+
+/* ═══════════════════ DAY BAR ═══════════════════ */
+.dbar{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
+.dinp{
+  background:var(--surface);color:var(--text);
+  border:none;padding:6px 10px;border-radius:10px;
+  font-family:'Cairo',sans-serif;font-size:12px;width:70px;outline:none;text-align:center;
+  box-shadow:var(--nm-inset);
+}
+.dinp:focus{box-shadow:var(--nm-pressed);}
+body.light .dinp{background:#f5f7fa;box-shadow:inset 2px 2px 5px #d0d5df,inset -2px -2px 5px #fff;border:1px solid #e8edf5;}
+.msel{
+  background:var(--surface);color:var(--text);
+  border:none;padding:6px 10px;border-radius:10px;
+  font-family:'Cairo',sans-serif;font-size:11px;outline:none;cursor:pointer;
+  box-shadow:var(--nm-inset);
+}
+.msel:focus{box-shadow:var(--nm-pressed);}
+body.light .msel{background:#f5f7fa;box-shadow:inset 2px 2px 5px #d0d5df,inset -2px -2px 5px #fff;border:1px solid #e8edf5;}
+.dlabel{font-size:11px;color:var(--text-muted);font-weight:600;}
+
+/* ═══════════════════ REP BUTTONS ═══════════════════ */
+.repsel{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:18px;}
+.rb{
+  padding:7px 16px;border-radius:20px;border:none;
+  background:var(--surface);color:var(--text-muted);
+  font-family:'Cairo',sans-serif;font-size:12px;font-weight:600;cursor:pointer;
+  transition:all .2s;box-shadow:var(--nm-raised);
+}
+.rb:hover{color:var(--text);box-shadow:var(--nm-pressed);}
+.rb.on{background:var(--accent);color:#fff;box-shadow:0 4px 14px rgba(0,128,128,.35);}
+.rb.allbtn.on{background:var(--accent2);box-shadow:0 4px 14px rgba(124,58,237,.35);}
+body.light .rb{background:#f0f2f5;box-shadow:3px 3px 8px #c8cdd8,-3px -3px 8px #fff;}
+body.light .rb.on{background:var(--accent);color:#fff;box-shadow:0 4px 14px rgba(0,153,153,.3);}
+
+/* ═══════════════════ NPS ═══════════════════ */
+.npsgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-bottom:18px;}
+.npsc{
+  border-radius:16px;padding:16px;
+  box-shadow:var(--nm-raised);background:var(--surface);
+}
+body.light .npsc{background:#fff;box-shadow:0 2px 12px rgba(0,0,0,.07);}
+.npsc.gn{border-right:3px solid var(--success);}
+.npsc.ye{border-right:3px solid var(--warn);}
+.npsc.re{border-right:3px solid var(--danger);}
+
+.npsname{font-size:12px;font-weight:700;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;}
+.npspct{font-size:22px;font-weight:900;font-family:'Tajawal';margin:5px 0;}
+.npspct.gn{color:var(--success);}
+.npspct.ye{color:var(--warn);}
+.npspct.re{color:var(--danger);}
+.npsrow{display:flex;justify-content:space-between;font-size:10px;margin-top:4px;}
+.npslbl{color:var(--text-muted);}
+.npsval{font-family:'Tajawal';font-weight:700;}
+.npstg{
+  font-size:9px;margin-top:7px;padding:4px 8px;
+  border-radius:7px;color:var(--text-muted);
+  background:var(--surface-2);
+  box-shadow:inset 1px 1px 3px var(--sh-dark), inset -1px -1px 3px var(--sh-light);
+  border:none;
+}
+body.light .npstg{background:#f0f2f5;box-shadow:inset 1px 1px 3px #cdd2dc,inset -1px -1px 3px #fff;border:none;}
+
+.npstotal{
+  background:var(--surface);border-radius:var(--r);
+  padding:14px 18px;display:flex;align-items:center;flex-wrap:wrap;gap:16px;
+  margin-bottom:16px;box-shadow:var(--nm-raised);
+}
+body.light .npstotal{background:#fff;box-shadow:0 2px 12px rgba(0,0,0,.07);border:1px solid #edf0f5;}
+.ntitem{text-align:center;padding:0 10px;}
+.ntv{font-size:20px;font-weight:900;font-family:'Tajawal';color:var(--accent-g);}
+.ntl{font-size:9px;color:var(--text-muted);text-transform:uppercase;font-weight:600;}
+.nt-div{width:1px;height:34px;background:var(--border);}
+
+/* ═══════════════════ LEADERBOARD ═══════════════════ */
+.lb{display:flex;flex-direction:column;gap:7px;}
+.lbr{
+  display:flex;align-items:center;gap:10px;padding:9px 13px;
+  border-radius:12px;background:var(--surface);
+  box-shadow:var(--nm-raised);transition:all .18s;
+}
+.lbr:hover{box-shadow:var(--nm-pressed);transform:translateX(-2px);}
+body.light .lbr{background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.06);border:1px solid #edf0f5;}
+.lbrank{font-size:16px;font-weight:900;font-family:'Tajawal';min-width:26px;text-align:center;}
+.lbrank.gold{color:var(--gold);}
+.lbrank.silver{color:#94a3b8;}
+.lbrank.bronze{color:#cd7c3a;}
+.lbname{flex:1;font-size:12px;font-weight:600;}
+.lbval{font-size:11px;color:var(--text-muted);}
+.lbpct{font-size:14px;font-weight:900;font-family:'Tajawal';}
+
+/* ═══════════════════ GAP CHART ═══════════════════ */
+.gapwrap{
+  background:var(--surface);border-radius:var(--r);padding:18px;
+  margin-bottom:18px;box-shadow:var(--nm-raised);
+}
+body.light .gapwrap{background:#fff;box-shadow:0 2px 12px rgba(0,0,0,.07);border:1px solid #edf0f5;}
+
+/* ═══════════════════ DIV BAR ═══════════════════ */
+.divb{display:flex;align-items:center;gap:7px;}
+.divbg{flex:1;height:6px;background:var(--sh-dark);border-radius:10px;overflow:hidden;}
+body.light .divbg{background:#e4e8ef;}
+.divf{height:100%;border-radius:10px;background:linear-gradient(90deg,var(--success),var(--accent-g));}
+
+/* ═══════════════════ SAVEBAR ═══════════════════ */
+.savebar{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center;}
+
+/* ═══════════════════ SPINNER ═══════════════════ */
+.spin{display:inline-block;width:13px;height:13px;border:2px solid rgba(0,160,160,.2);border-top-color:var(--accent-g);border-radius:50%;animation:sp .7s linear infinite;}
+@keyframes sp{to{transform:rotate(360deg);}}
+
+/* ═══════════════════ TOAST ═══════════════════ */
+.toast{
+  position:fixed;bottom:22px;left:50%;transform:translateX(-50%);
+  background:var(--surface);color:var(--text);
+  padding:10px 22px;border-radius:14px;font-family:Cairo;font-size:12px;font-weight:600;
+  z-index:9999;box-shadow:var(--nm-raised-lg);animation:fi .3s ease;
+}
+body.light .toast{background:#fff;box-shadow:0 8px 24px rgba(0,0,0,.12);border:1px solid #edf0f5;}
+
+/* ═══════════════════ COV STYLES ═══════════════════ */
+.cov-subtab{
+  flex:1;padding:12px 18px;background:none;border:none;
+  color:var(--text-muted);cursor:pointer;
+  font-family:'Cairo',sans-serif;font-size:12px;font-weight:600;
+  transition:all .2s;border-bottom:3px solid transparent;
+}
+.cov-subtab:hover{color:var(--text);}
+.cov-subtab-on{color:var(--accent-g) !important;border-bottom-color:var(--accent-g) !important;}
+
+.cov-sec-btn{
+  padding:9px 18px;background:none;border:none;
+  border-bottom:2px solid transparent;color:var(--text-muted);
+  cursor:pointer;font-family:'Cairo',sans-serif;font-size:11px;font-weight:600;
+  white-space:nowrap;transition:all .2s;
+}
+.cov-sec-btn:hover{color:var(--text);}
+.cov-sec-btn.on{color:var(--accent-g);border-bottom-color:var(--accent-g);}
+
+.cov-tbl{width:100%;border-collapse:collapse;font-size:12px;}
+.cov-tbl th{
+  background:var(--th-bg);color:var(--text-muted);
+  padding:9px 11px;text-align:right;font-weight:600;
+  border-bottom:2px solid var(--border);white-space:nowrap;
+}
+.cov-tbl td{padding:8px 11px;border-bottom:1px solid var(--td-border);color:var(--text);vertical-align:middle;}
+.cov-tbl tr:hover td{background:var(--hover-row);}
+
+.cov-pill{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;}
+.cov-high{background:rgba(0,166,61,.15);color:var(--success);}
+.cov-mid{background:rgba(245,158,11,.15);color:var(--warn);}
+.cov-low{background:rgba(255,33,87,.15);color:var(--danger);}
+
+.cov-mbar-bg{background:var(--sh-dark);border-radius:3px;height:8px;overflow:hidden;min-width:60px;flex:1;}
+body.light .cov-mbar-bg{background:#e4e8ef;}
+.cov-mbar-fill{height:100%;border-radius:3px;}
+
+.cov-rank{display:inline-flex;width:24px;height:24px;border-radius:50%;align-items:center;justify-content:center;font-size:10px;font-weight:700;}
+.cov-r1{background:#854d0e;color:#fef08a;}
+.cov-r2{background:#374151;color:#e2e8f0;}
+.cov-r3{background:#7c2d12;color:#fed7aa;}
+.cov-rn{background:var(--surface-2);color:var(--text-muted);border:1px solid var(--border);}
+
+/* COV panel wrapper */
+.cov-panel-wrap{
+  background:var(--surface);border-radius:var(--r);margin-bottom:18px;
+  overflow:hidden;box-shadow:var(--nm-raised);
+}
+body.light .cov-panel-wrap{background:#fff;box-shadow:0 2px 12px rgba(0,0,0,.07);border:1px solid #edf0f5;}
+
+.cov-subtab-bar{display:flex;border-bottom:1px solid var(--border);}
+.cov-sec-bar{display:flex;gap:0;border-bottom:1px solid var(--border);overflow-x:auto;background:var(--surface-2);}
+body.light .cov-sec-bar{background:#f5f7fa;}
+
+/* ═══════════════════ APP REVEAL ═══════════════════ */
 @keyframes slideUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
 .app-revealed header,.app-revealed .tabs,.app-revealed .content{animation:slideUp .4s ease both;}
 .app-revealed .tabs{animation-delay:.07s;}
 .app-revealed .content{animation-delay:.14s;}
 
+/* ═══════════════════ RESPONSIVE ═══════════════════ */
 @media(max-width:900px){
   .content{padding:12px;}
   .g2,.cg,.g3{grid-template-columns:1fr;}
-  .header{padding:9px 13px;}
-  .tabs{padding:0 9px;}
+  .header{padding:10px 14px;}
+  .tabs{padding:0 10px;}
 }
+
+/* ═══════════════════ LOGIN SHAKE ═══════════════════ */
+@keyframes loginShake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
 </style>
 </head>
 <body>
@@ -413,10 +586,10 @@ td.n{font-family:'Tajawal',sans-serif;font-weight:600;}
 <div id="login-screen">
   <div class="login-card">
     <div class="login-logo"></div>
-    <div class="login-title">Wefaa Accountanat</div>
-    <div class="login-sub">فرع الوفاء — لوحة تحليل المبيعات</div>
+    <div class="login-title">Wefaa Acc</div>
+    <div class="login-sub">فرع الوفاء — لوحة تحليل المبيعات V5</div>
 
-    <input class="login-input" type="text"     id="loginUser" placeholder="Username" autocomplete="username">
+    <input class="login-input" type="text" id="loginUser" placeholder="Username" autocomplete="username">
     <input class="login-input" type="password" id="loginPass" placeholder="Password" autocomplete="current-password"
            onkeydown="if(event.key==='Enter')doLogin()">
 
@@ -434,8 +607,8 @@ td.n{font-family:'Tajawal',sans-serif;font-weight:600;}
   <div class="hbrand">
     <div class="hicon">📊</div>
     <div>
-      <h1>لوحة تحليل مبيعات فرع الوفاء</h1>
-      <div class="hsub" id="periodLabel">V4 · جاهز للرفع</div>
+      <h1>تحليل مبيعات فرع الوفاء</h1>
+      <div class="hsub" id="periodLabel">V5 Neumorphic · جاهز للرفع</div>
     </div>
   </div>
   <div class="hright">
@@ -449,19 +622,16 @@ td.n{font-family:'Tajawal',sans-serif;font-weight:600;}
   <button class="tb on" onclick="TAB('settings')">⚙️ الإعدادات <span class="tbadge">1</span></button>
   <button class="tb" onclick="TAB('dash')">📈 التحليل <span class="tbadge g">2</span></button>
   <button class="tb" onclick="TAB('nps')">💰 NPS المالي <span class="tbadge r">3</span></button>
-  <button class="tb" onclick="TAB('cov')">👥 تغطية العملاء <span class="tbadge" style="background:#0891b2">4</span></button>
+  <button class="tb" onclick="TAB('cov')">👥 تغطية العملاء <span class="tbadge c">4</span></button>
 </div>
 
 <div class="content">
 
-<!-- ══════════════════════════════════════════
-     TAB 1 — SETTINGS / UPLOAD
-══════════════════════════════════════════ -->
+<!-- ══════════════════ TAB 1 — SETTINGS ══════════════════ -->
 <div class="pane on" id="pane-settings">
   <div class="al al-i">💡 ارفع ملف الخطط أولاً، ثم ارفع تقارير البيع والعملاء يومياً. الخطط تُحفظ تلقائياً ولا تحتاج لرفع كل يوم.</div>
 
-  <!-- PLANS FILE -->
-  <div class="card" style="margin-bottom:14px">
+  <div class="card">
     <div class="ctitle">🎯 ملف الخطط والأصناف</div>
     <div id="plansSavedInfo"></div>
     <div class="upzone" id="zone-plans">
@@ -471,13 +641,12 @@ td.n{font-family:'Tajawal',sans-serif;font-weight:600;}
       <div class="uphint">يُقرأ المنطق: شيت 2 — الصنف في A، خطط المناديب من B حتى Z</div>
     </div>
     <div id="plans-status"></div>
-    <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+    <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
       <button class="btn btn-g btn-sm" onclick="savePlansToStorage()">💾 حفظ الخطط في الذاكرة</button>
       <button class="btn btn-r btn-sm" onclick="clearPlansStorage()">🗑️ مسح الخطط المحفوظة</button>
     </div>
   </div>
 
-  <!-- DAILY REPORTS -->
   <div class="g2">
     <div class="card">
       <div class="ctitle">🛒 تقرير البيع (يومي)</div>
@@ -489,7 +658,6 @@ td.n{font-family:'Tajawal',sans-serif;font-weight:600;}
       </div>
       <div id="sales-status"></div>
     </div>
-
     <div class="card">
       <div class="ctitle">👥 تقرير العملاء (يومي)</div>
       <div class="upzone" id="zone-cust">
@@ -502,24 +670,21 @@ td.n{font-family:'Tajawal',sans-serif;font-weight:600;}
     </div>
   </div>
 
-  <div style="margin-top:16px;text-align:center">
+  <div style="margin-top:18px;text-align:center">
     <button class="btn" id="analyzeBtn" onclick="runAnalysis()" disabled>
       <span id="analyzeTxt">🔍 تحليل البيانات</span>
     </button>
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════
-     TAB 2 — DASHBOARD
-══════════════════════════════════════════ -->
+<!-- ══════════════════ TAB 2 — DASHBOARD ══════════════════ -->
 <div class="pane" id="pane-dash">
-  <div id="dash-empty" style="text-align:center;padding:60px 20px;color:var(--text-dim)">
-    <div style="font-size:44px;opacity:.3;margin-bottom:12px">📊</div>
+  <div id="dash-empty" style="text-align:center;padding:60px 20px;color:var(--text-muted)">
+    <div style="font-size:46px;opacity:.25;margin-bottom:14px">📊</div>
     <p style="font-size:13px">ارفع الملفات في تبويب الإعدادات وانقر تحليل البيانات</p>
   </div>
   <div id="dash-content" style="display:none">
 
-    <!-- Run Rate -->
     <div class="rrs">
       <div class="rrt">⏱️ Run Rate — أيام العمل (الجمعة إجازة، اليوم الأول والأخير يُحتسبان)</div>
       <div class="dbar">
@@ -534,31 +699,26 @@ td.n{font-family:'Tajawal',sans-serif;font-weight:600;}
         </select>
         <span class="dlabel">اليوم:</span>
         <input class="dinp" type="number" id="curDay" value="1" min="1" max="31" onchange="renderDash()">
-        <span class="dlabel" id="wdInfo" style="color:var(--accent3);font-size:10px"></span>
+        <span class="dlabel" id="wdInfo" style="color:var(--success);font-size:10px"></span>
       </div>
       <div class="rrg" id="rrCards"></div>
     </div>
 
-    <!-- Rep Selector -->
     <div class="repsel" id="repSel"></div>
 
-    <!-- Actions -->
     <div class="savebar">
       <button class="btn btn-gh btn-sm" onclick="saveImg('dash-content')">📷 حفظ كصورة</button>
       <button class="btn btn-gh btn-sm" onclick="exportXL()">📥 Excel</button>
     </div>
 
-    <!-- Stats (بدون إجمالي العملاء) -->
     <div class="sr" id="statsRow"></div>
 
-    <!-- Gap Chart -->
     <div class="gapwrap">
       <div class="ct">📊 فجوة الخطة vs المحقق — أعلى 15 صنف</div>
       <div style="position:relative;height:290px"><canvas id="cGap"></canvas></div>
     </div>
 
-    <!-- Productivity Table (الوحيد) -->
-    <div class="card" style="margin-bottom:16px">
+    <div class="card">
       <div class="ctitle">🎯 عمق التغطية — الكمية · الخطة · الإنجاز · العملاء · الإنتاجية</div>
       <div class="tw">
         <table>
@@ -572,7 +732,6 @@ td.n{font-family:'Tajawal',sans-serif;font-weight:600;}
       </div>
     </div>
 
-    <!-- Pie Charts -->
     <div class="cg">
       <div class="cc"><div class="ct">🏆 أعلى 5 أصناف مبيعاً</div><div class="chw"><canvas id="cT5S"></canvas></div></div>
       <div class="cc"><div class="ct">📉 أقل 5 أصناف (qty > 0)</div><div class="chw"><canvas id="cB5S"></canvas></div></div>
@@ -582,44 +741,36 @@ td.n{font-family:'Tajawal',sans-serif;font-weight:600;}
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════
-     TAB 3 — NPS FINANCIAL
-══════════════════════════════════════════ -->
+<!-- ══════════════════ TAB 3 — NPS ══════════════════ -->
 <div class="pane" id="pane-nps">
-  <div id="nps-empty" style="text-align:center;padding:60px 20px;color:var(--text-dim)">
-    <div style="font-size:44px;opacity:.3;margin-bottom:12px">💰</div>
+  <div id="nps-empty" style="text-align:center;padding:60px 20px;color:var(--text-muted)">
+    <div style="font-size:46px;opacity:.25;margin-bottom:14px">💰</div>
     <p style="font-size:13px">ارفع الملفات وانقر تحليل البيانات أولاً</p>
   </div>
   <div id="nps-content" style="display:none">
     <div class="savebar">
       <button class="btn btn-gh btn-sm" onclick="saveImg('nps-content')">📷 حفظ كصورة</button>
     </div>
-
-    <!-- Totals (إجمالي الخطة + المحقق + النسبة + عدد المناديب) -->
     <div class="npstotal" id="npsTotals"></div>
-
     <div class="g2" style="margin-bottom:16px">
       <div class="card">
-        <div class="ctitle">🏆 ترتيب المناديب — نسبة الإنجاز % (تنازلي)</div>
+        <div class="ctitle">🏆 ترتيب المناديب — نسبة المحقق % (تنازلي)</div>
         <div class="lb" id="lbEl"></div>
       </div>
       <div class="card">
-        <div class="ctitle">📊 تنوع السلة — % الأصناف المباعة لكل مندوب</div>
+        <div class="ctitle">📊 تنوع البيع — % الأصناف المباعة لكل مندوب</div>
         <div style="position:relative;height:270px"><canvas id="cDiversity"></canvas></div>
       </div>
     </div>
-
-    <div class="ctitle" style="padding:0 0 11px">💳 كارت كل مندوب — مرتبة بنسبة الإنجاز</div>
+    <div class="ctitle" style="padding:0 0 12px">💳 كارت كل مندوب — مرتبة بنسبة المحقق</div>
     <div class="npsgrid" id="npsCards"></div>
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════
-     TAB 4 — CUSTOMER COVERAGE
-══════════════════════════════════════════ -->
+<!-- ══════════════════ TAB 4 — COVERAGE ══════════════════ -->
 <div class="pane" id="pane-cov">
-  <div id="cov-empty" style="text-align:center;padding:60px 20px;color:var(--text-dim)">
-    <div style="font-size:44px;opacity:.3;margin-bottom:12px">👥</div>
+  <div id="cov-empty" style="text-align:center;padding:60px 20px;color:var(--text-muted)">
+    <div style="font-size:46px;opacity:.25;margin-bottom:14px">👥</div>
     <p style="font-size:13px">ارفع الملفات وانقر تحليل البيانات أولاً</p>
   </div>
   <div id="cov-content" style="display:none">
@@ -627,23 +778,20 @@ td.n{font-family:'Tajawal',sans-serif;font-weight:600;}
       <button class="btn btn-gh btn-sm" onclick="saveImg('cov-content')">📷 حفظ كصورة</button>
     </div>
 
-    <!-- Sub tabs: القطاع / المندوب -->
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);margin-bottom:16px;overflow:hidden">
-      <div style="display:flex;border-bottom:1px solid var(--border)">
+    <div class="cov-panel-wrap">
+      <div class="cov-subtab-bar">
         <button id="cov-tab-sector" class="cov-subtab cov-subtab-on" onclick="covSwitch('sector')">🏪 تحليل بالقطاع</button>
         <button id="cov-tab-rep"    class="cov-subtab"               onclick="covSwitch('rep')">👤 تحليل بالمندوب</button>
       </div>
 
-      <!-- Sector panel -->
       <div id="cov-sector-panel">
-        <div style="display:flex;gap:0;border-bottom:1px solid var(--border);overflow-x:auto;background:var(--surface2)" id="cov-sec-tabs"></div>
-        <div id="cov-sec-content" style="padding:16px"></div>
+        <div class="cov-sec-bar" id="cov-sec-tabs"></div>
+        <div id="cov-sec-content" style="padding:18px"></div>
       </div>
 
-      <!-- Rep panel -->
       <div id="cov-rep-panel" style="display:none">
-        <div style="display:flex;gap:0;border-bottom:1px solid var(--border);overflow-x:auto;background:var(--surface2)" id="cov-rep-tabs"></div>
-        <div id="cov-rep-content" style="padding:16px"></div>
+        <div class="cov-sec-bar" id="cov-rep-tabs"></div>
+        <div id="cov-rep-content" style="padding:18px"></div>
       </div>
     </div>
   </div>
@@ -657,25 +805,17 @@ td.n{font-family:'Tajawal',sans-serif;font-weight:600;}
 // ═══════════════════════════════════════════════════════════
 const NPS_MULT  = 1.135;
 const MONTH_DAYS = [0,31,28,31,30,31,30,31,31,30,31,30,31];
-const CT = ['#00d4ff','#7c3aed','#10b981','#f59e0b','#ec4899'];
-const CB = ['#ef4444','#f97316','#eab308','#84cc16','#06b6d4'];
+const CT = ['#00a0a0','#7c3aed','#00A63D','#f59e0b','#ec4899'];
+const CB = ['#FF2157','#f97316','#eab308','#84cc16','#06b6d4'];
 
 // ═══════════════════════════════════════════════════════════
 // STATE
 // ═══════════════════════════════════════════════════════════
 const APP = {
-  plans: {},        // {model: total_plan}
-  npsPlans: {},     // {rep: NPS_plan} مستخرج من صف NPS مباشرة
-  plansPerRep: {},  // {rep: {model: plan_qty}}
-  modelsOrder: [],  // ordered list from sheet1 col A
-  modelsInfo: {},   // {model: {main, sub}}
-  repsList: [],     // ordered from sheet2 header row
-  salesData: [],    // [{rep, model, qty, price}]
-  custData: [],     // [{rep, model, customers}]
-  covRaw:   [],     // [{rep, sector, product, customers}] للتابة 4
-  analyzed: null,
-  currentRep: 'all',
-  charts: {}
+  plans:{}, npsPlans:{}, plansPerRep:{},
+  modelsOrder:[], modelsInfo:{}, repsList:[],
+  salesData:[], custData:[], covRaw:[],
+  analyzed:null, currentRep:'all', charts:{}
 };
 
 // ═══════════════════════════════════════════════════════════
@@ -714,7 +854,7 @@ function rows(ws){ return XLSX.utils.sheet_to_json(ws,{header:1,defval:''}); }
 function findHeader(data,kws){
   for(let i=0;i<Math.min(data.length,15);i++){
     const row=data[i].map(c=>C(c));
-    if(kws.filter(k=>row.some(c=>c.includes(k))).length >= Math.ceil(kws.length*.5)) return i;
+    if(kws.filter(k=>row.some(c=>c.includes(k))).length>=Math.ceil(kws.length*.5))return i;
   }
   return -1;
 }
@@ -726,67 +866,48 @@ async function handlePlansFile(file){
   if(!file)return;
   setStatus('plans-status','loading','⏳ جاري قراءة ملف الخطط...');
   try{
-    const wb = await readXL(file);
-
-    // ── Sheet1: col A = اسم الملف (dialectal) ، col B = الاسم المعياري (canonical) ──
-    // المنطق:
-    //   canonical = C(colB) أو C(colA)  →  مُعيَّر دائماً للمطابقة
-    //   display   = colA  (للعرض في الجدول)
-    //   modelsOrder  = قائمة canonical بالترتيب
-    //   colAtoB   = colA → canonical  (لتحويل مفاتيح Sheet2)
-    // ⚠️ لا تجاهل لأي صفوف
-    const sh1 = wb.Sheets[wb.SheetNames[0]];
-    const d1  = rows(sh1);
-    APP.modelsOrder = [];
-    APP.modelsInfo  = {};
-    const colAtoB   = {};
+    const wb=await readXL(file);
+    const sh1=wb.Sheets[wb.SheetNames[0]];
+    const d1=rows(sh1);
+    APP.modelsOrder=[];APP.modelsInfo={};
+    const colAtoB={};
     for(let i=0;i<d1.length;i++){
-      const rawA = String(d1[i][0]||'').trim();
-      const rawB = String(d1[i][1]||'').trim();
-      if(!rawA && !rawB) continue;
-      if(/^(الصنف|صنف|اسم الصنف|item|model)$/i.test(rawA)) continue;
-      // canonical = C(colB) أو C(colA) — مُعيَّر للمطابقة
-      const canonical = rawB ? C(rawB) : C(rawA);
-      const display   = rawA || rawB;   // للعرض
-      colAtoB[rawA]   = canonical;
-      colAtoB[C(rawA)]= canonical;      // أيضاً المُعيَّر → canonical
+      const rawA=String(d1[i][0]||'').trim();
+      const rawB=String(d1[i][1]||'').trim();
+      if(!rawA&&!rawB)continue;
+      if(/^(الصنف|صنف|اسم الصنف|item|model)$/i.test(rawA))continue;
+      const canonical=rawB?C(rawB):C(rawA);
+      const display=rawA||rawB;
+      colAtoB[rawA]=canonical;
+      colAtoB[C(rawA)]=canonical;
       if(!APP.modelsInfo[canonical]){
         APP.modelsOrder.push(canonical);
-        APP.modelsInfo[canonical] = { main: display, sub: rawB||rawA };
+        APP.modelsInfo[canonical]={main:display,sub:rawB||rawA};
       }
     }
-
-    // ── Sheet2: الصف 0 = أسماء المناديب (B→Z) ، الصفوف 1→N = أصناف وخطط ──
-    // ⚠️ لا تجاهل لأي صفوف
-    const sh2 = wb.Sheets[wb.SheetNames[1]];
-    const d2  = rows(sh2);
-    APP.repsList    = [];
-    APP.plansPerRep = {};
-    const headerRow = d2[0]||[];
+    const sh2=wb.Sheets[wb.SheetNames[1]];
+    const d2=rows(sh2);
+    APP.repsList=[];APP.plansPerRep={};
+    const headerRow=d2[0]||[];
     for(let c=1;c<=25;c++){
       const rn=C(headerRow[c]);
-      if(rn && rn!=='' && !APP.repsList.includes(rn)){
+      if(rn&&rn!==''&&!APP.repsList.includes(rn)){
         APP.repsList.push(rn);
         APP.plansPerRep[rn]={};
       }
     }
-    APP.plans     = {};
-    APP.npsPlans  = {};   // {rep → NPS خطة} مستخرجة من صف NPS مباشرة
+    APP.plans={};APP.npsPlans={};
     for(let r=1;r<d2.length;r++){
-      const rawProd = String(d2[r][0]||'').trim();
-      if(!rawProd) continue;
-
-      // ── صف NPS: نأخذ خطة كل مندوب مباشرة من الخلية المقابلة ──
+      const rawProd=String(d2[r][0]||'').trim();
+      if(!rawProd)continue;
       if(/^nps$/i.test(rawProd.trim())){
         APP.repsList.forEach((rn,idx)=>{
           const v=parseFloat(d2[r][idx+1])||0;
           APP.npsPlans[rn]=v;
         });
-        continue;   // لا نضيفه لـ plansPerRep العادية
+        continue;
       }
-
-      // حوّل: rawProd (col A في Sheet2) → canonical
-      const prod = colAtoB[rawProd] || colAtoB[C(rawProd)] || C(rawProd);
+      const prod=colAtoB[rawProd]||colAtoB[C(rawProd)]||C(rawProd);
       let total=0;
       APP.repsList.forEach((rn,idx)=>{
         const v=parseFloat(d2[r][idx+1])||0;
@@ -795,67 +916,61 @@ async function handlePlansFile(file){
       });
       APP.plans[prod]=(APP.plans[prod]||0)+total;
     }
-
-    setStatus('plans-status','ok',
-      `✅ ${APP.modelsOrder.length} صنف · ${APP.repsList.length} مناديب (${APP.repsList.join('، ')})`);
-    document.getElementById('plans-status').innerHTML +=
-      `<div style="margin-top:6px;font-size:10px;color:var(--text-dim)">📦 أول 5 أصناف: ${APP.modelsOrder.slice(0,5).join(' · ')}</div>`;
+    setStatus('plans-status','ok',`✅ ${APP.modelsOrder.length} صنف · ${APP.repsList.length} مناديب (${APP.repsList.join('، ')})`);
+    document.getElementById('plans-status').innerHTML+=
+      `<div style="margin-top:6px;font-size:10px;color:var(--text-muted)">📦 أول 5 أصناف: ${APP.modelsOrder.slice(0,5).join(' · ')}</div>`;
     checkReady();
-  }catch(e){ setStatus('plans-status','err','❌ '+e.message); }
+  }catch(e){setStatus('plans-status','err','❌ '+e.message);}
 }
 
 // ═══════════════════════════════════════════════════════════
-// FILE: SALES — تجاهل أول 5 صفوف ثم البحث عن العناوين
+// FILE: SALES
 // ═══════════════════════════════════════════════════════════
 async function handleSalesFile(file){
   if(!file)return;
   setStatus('sales-status','loading','⏳ جاري قراءة تقرير البيع...');
   try{
-    const wb = await readXL(file);
-    const ws = wb.Sheets[wb.SheetNames[0]];
-    const d  = rows(ws);
-    // تجاهل أول 5 صفوف — ابحث عن العناوين من الصف 5 فصاعداً
-    let hi = -1;
+    const wb=await readXL(file);
+    const ws=wb.Sheets[wb.SheetNames[0]];
+    const d=rows(ws);
+    let hi=-1;
     for(let i=5;i<Math.min(d.length,15);i++){
       const row=d[i].map(c=>C(c));
       if(row.some(c=>c.includes('اسم المندوب')||c.includes('مندوب'))
        &&row.some(c=>c.includes('موديل'))
        &&row.some(c=>/(كميه|كمية)/.test(c))){hi=i;break;}
     }
-    // fallback بدون شرط 5 صفوف
-    if(hi<0) hi = findHeader(d,['اسم المندوب','موديل','الكمية']);
-    if(hi<0) throw new Error('لم يتم العثور على صف العناوين');
-    const h = d[hi].map(c=>C(c));
-    const cRep   = h.findIndex(c=>/(اسم المندوب|مندوب)/.test(c));
-    const cModel = h.findIndex(c=>/(موديل|model)/i.test(c));
-    const cQty   = h.findIndex(c=>/(الكميه|الكمية|كمية|كميه)/.test(c));
-    const cPrice = h.findIndex(c=>/(السعر|سعر)/.test(c));
-    if(cRep<0||cModel<0||cQty<0) throw new Error(`عواميد ناقصة — مندوب:${cRep} موديل:${cModel} كمية:${cQty}`);
+    if(hi<0)hi=findHeader(d,['اسم المندوب','موديل','الكمية']);
+    if(hi<0)throw new Error('لم يتم العثور على صف العناوين');
+    const h=d[hi].map(c=>C(c));
+    const cRep=h.findIndex(c=>/(اسم المندوب|مندوب)/.test(c));
+    const cModel=h.findIndex(c=>/(موديل|model)/i.test(c));
+    const cQty=h.findIndex(c=>/(الكميه|الكمية|كمية|كميه)/.test(c));
+    const cPrice=h.findIndex(c=>/(السعر|سعر)/.test(c));
+    if(cRep<0||cModel<0||cQty<0)throw new Error(`عواميد ناقصة — مندوب:${cRep} موديل:${cModel} كمية:${cQty}`);
     APP.salesData=[];
     for(let i=hi+1;i<d.length;i++){
-      const rep=C(d[i][cRep]), model=C(d[i][cModel]);
+      const rep=C(d[i][cRep]),model=C(d[i][cModel]);
       try{
-        const qty=parseFloat(d[i][cQty])||0, price=parseFloat(cPrice>=0?d[i][cPrice]:0)||0;
-        if(rep&&model) APP.salesData.push({rep,model,qty,price});
+        const qty=parseFloat(d[i][cQty])||0,price=parseFloat(cPrice>=0?d[i][cPrice]:0)||0;
+        if(rep&&model)APP.salesData.push({rep,model,qty,price});
       }catch{}
     }
     setStatus('sales-status','ok',`✅ ${APP.salesData.length} سجل مبيعات`);
     checkReady();
-  }catch(e){ setStatus('sales-status','err','❌ '+e.message); }
+  }catch(e){setStatus('sales-status','err','❌ '+e.message);}
 }
 
 // ═══════════════════════════════════════════════════════════
-// FILE: CUSTOMERS — تجاهل أول 5 صفوف
+// FILE: CUSTOMERS
 // ═══════════════════════════════════════════════════════════
 async function handleCustFile(file){
   if(!file)return;
   setStatus('cust-status','loading','⏳ جاري قراءة تقرير العملاء...');
   try{
-    const wb = await readXL(file);
-    const ws = wb.Sheets[wb.SheetNames[0]];
-    const d  = rows(ws);
-
-    // تجاهل أول 5 صفوف — ابحث من الصف 5
+    const wb=await readXL(file);
+    const ws=wb.Sheets[wb.SheetNames[0]];
+    const d=rows(ws);
     let hi=-1,cRep=-1,cModel=-1,cCust=-1;
     for(let i=5;i<Math.min(d.length,15);i++){
       const row=d[i].map(c=>C(c));
@@ -864,7 +979,6 @@ async function handleCustFile(file){
       const ci=row.findIndex(c=>/(عدد العملاء|العملاء)/.test(c));
       if(ri>=0&&ci>=0){hi=i;cRep=ri;cCust=ci;cModel=mi>=0?mi:-1;break;}
     }
-    // fallback بدون شرط 5
     if(hi<0){
       for(let i=0;i<Math.min(d.length,15);i++){
         const row=d[i].map(c=>C(c));
@@ -873,24 +987,18 @@ async function handleCustFile(file){
         if(ri>=0&&ci>=0){hi=i;cRep=ri;cCust=ci;cModel=-1;break;}
       }
     }
-    if(hi<0) throw new Error('لم يتم العثور على عامود المندوب أو عدد العملاء');
-
+    if(hi<0)throw new Error('لم يتم العثور على عامود المندوب أو عدد العملاء');
     if(cModel<0){
-      const hrow = d[hi].map(c=>C(c));
+      const hrow=d[hi].map(c=>C(c));
       for(let c=0;c<hrow.length;c++){
         if(c===cRep||c===cCust)continue;
         const sample=C(d[Math.min(hi+1,d.length-1)]?.[c]||'');
         if(sample&&isNaN(parseFloat(sample))){cModel=c;break;}
       }
     }
-
-    APP.custData=[];
-    APP.covRaw=[];  // للتابة 4 — بيانات مفصّلة بالقطاع والصنف والمندوب
-
-    // detect sector column
-    const hrow2 = d[hi].map(c=>C(c));
-    const cSector = hrow2.findIndex(c=>/(قطاع البيع|قطاع|sector)/i.test(c));
-
+    APP.custData=[];APP.covRaw=[];
+    const hrow2=d[hi].map(c=>C(c));
+    const cSector=hrow2.findIndex(c=>/(قطاع البيع|قطاع|sector)/i.test(c));
     for(let i=hi+1;i<d.length;i++){
       const rep=C(d[i][cRep]);
       const model=cModel>=0?C(d[i][cModel]):'';
@@ -899,28 +1007,27 @@ async function handleCustFile(file){
         const cust=parseInt(d[i][cCust])||0;
         if(rep&&cust>0){
           APP.custData.push({rep,model,customers:cust});
-          // فلتر للتابة 4
           const EXCL=['مبيعات عامة الوفاق','محاسب الوفاق','مبيعات عامه الوفاق'];
           const ALLOWED=['تجزئة','جملة','بقالة','Key Retail - KR'];
-          if(!EXCL.includes(rep) && ALLOWED.includes(sector) && model){
-            APP.covRaw.push({rep, sector, product:model, customers:cust});
+          if(!EXCL.includes(rep)&&ALLOWED.includes(sector)&&model){
+            APP.covRaw.push({rep,sector,product:model,customers:cust});
           }
         }
       }catch{}
     }
     setStatus('cust-status','ok',`✅ ${APP.custData.length} سجل عملاء · ${APP.covRaw.length} سجل تغطية`);
     checkReady();
-  }catch(e){ setStatus('cust-status','err','❌ '+e.message); }
+  }catch(e){setStatus('cust-status','err','❌ '+e.message);}
 }
 
 // ═══════════════════════════════════════════════════════════
-// LOCALSTORAGE — حفظ واسترداد الخطط
+// LOCALSTORAGE
 // ═══════════════════════════════════════════════════════════
 function savePlansToStorage(){
   if(!APP.modelsOrder.length){showToast('⚠️ لا توجد خطط لحفظها');return;}
   localStorage.setItem('wafa_v4_plans',JSON.stringify({
-    plans:APP.plans, npsPlans:APP.npsPlans, plansPerRep:APP.plansPerRep,
-    modelsOrder:APP.modelsOrder, modelsInfo:APP.modelsInfo, repsList:APP.repsList
+    plans:APP.plans,npsPlans:APP.npsPlans,plansPerRep:APP.plansPerRep,
+    modelsOrder:APP.modelsOrder,modelsInfo:APP.modelsInfo,repsList:APP.repsList
   }));
   showToast('💾 تم الحفظ في الذاكرة');
   renderPlansStatus();
@@ -936,9 +1043,9 @@ function loadPlansFromStorage(){
     const s=localStorage.getItem('wafa_v4_plans');
     if(!s)return false;
     const d=JSON.parse(s);
-    APP.plans=d.plans||{}; APP.npsPlans=d.npsPlans||{};
+    APP.plans=d.plans||{};APP.npsPlans=d.npsPlans||{};
     APP.plansPerRep=d.plansPerRep||{};
-    APP.modelsOrder=d.modelsOrder||[]; APP.modelsInfo=d.modelsInfo||{}; APP.repsList=d.repsList||[];
+    APP.modelsOrder=d.modelsOrder||[];APP.modelsInfo=d.modelsInfo||{};APP.repsList=d.repsList||[];
     renderPlansStatus();
     setStatus('plans-status','ok',`✅ محمَّل من الذاكرة: ${APP.modelsOrder.length} صنف · ${APP.repsList.length} مناديب`);
     return true;
@@ -958,9 +1065,9 @@ function checkReady(){
 }
 function setStatus(id,type,msg){
   const el=document.getElementById(id);
-  if(type==='loading') el.innerHTML=`<div class="upok" style="background:rgba(0,212,255,.08);border-color:rgba(0,212,255,.2);color:var(--accent)"><div class="spin"></div>${msg}</div>`;
-  else if(type==='ok')  el.innerHTML=`<div class="upok">${msg}</div>`;
-  else                  el.innerHTML=`<div class="uperr">${msg}</div>`;
+  if(type==='loading')el.innerHTML=`<div class="upok" style="background:rgba(0,160,160,.08);border-color:rgba(0,160,160,.2);color:var(--accent-g)"><div class="spin"></div>${msg}</div>`;
+  else if(type==='ok')el.innerHTML=`<div class="upok">${msg}</div>`;
+  else el.innerHTML=`<div class="uperr">${msg}</div>`;
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -969,10 +1076,10 @@ function setStatus(id,type,msg){
 function runAnalysis(){
   const btn=document.getElementById('analyzeBtn');
   const txt=document.getElementById('analyzeTxt');
-  btn.disabled=true; txt.innerHTML='<div class="spin"></div> تحليل...';
+  btn.disabled=true;txt.innerHTML='<div class="spin"></div> تحليل...';
   setTimeout(()=>{
     try{
-      APP.analyzed = buildAnalyzed();
+      APP.analyzed=buildAnalyzed();
       buildRepSel();
       APP.currentRep='all';
       renderDash();
@@ -986,7 +1093,6 @@ function runAnalysis(){
 }
 
 function buildAnalyzed(){
-  // ── Step 1: Aggregate raw sales per rep per exact-model ──
   const salesAgg={};
   for(const {rep,model,qty,price} of APP.salesData){
     if(!salesAgg[rep])salesAgg[rep]={};
@@ -994,48 +1100,30 @@ function buildAnalyzed(){
     salesAgg[rep][model].qty+=qty;
     salesAgg[rep][model].price+=price;
   }
-
-  // ── Step 2: FORWARD MAP — each unique sales-model → best canonical plan-model ──
-  // modelsOrder الآن = col B (الاسم المعياري) = نفس ما في تقرير البيع والعملاء
-  // ⟹ exact match يكفي في الغالب، fuzzy فقط للاستثناءات
   const allSalesModels=[...new Set(APP.salesData.map(r=>r.model))];
   const salesModelMap={};
   for(const sm of allSalesModels){
     const smC=C(sm);
-    // 1) exact
     if(APP.modelsOrder.includes(smC)){salesModelMap[sm]=smC;continue;}
-    // 2) fuzzy fallback
     let bestM=null,bestS=-1;
-    for(const pm of APP.modelsOrder){
-      const s=sim(smC,pm);
-      if(s>bestS){bestS=s;bestM=pm;}
-    }
+    for(const pm of APP.modelsOrder){const s=sim(smC,pm);if(s>bestS){bestS=s;bestM=pm;}}
     salesModelMap[sm]=bestS>=0.5?bestM:smC;
   }
-
-  // ── Step 3: CUSTOMERS forward map — same logic ──
   const allCustModels=[...new Set(APP.custData.map(r=>r.model).filter(Boolean))];
   const custModelMap={};
   for(const cm of allCustModels){
     const cmC=C(cm);
     if(APP.modelsOrder.includes(cmC)){custModelMap[cm]=cmC;continue;}
     let bestM=null,bestS=-1;
-    for(const pm of APP.modelsOrder){
-      const s=sim(cmC,pm);
-      if(s>bestS){bestS=s;bestM=pm;}
-    }
+    for(const pm of APP.modelsOrder){const s=sim(cmC,pm);if(s>bestS){bestS=s;bestM=pm;}}
     custModelMap[cm]=bestS>=0.5?bestM:cmC;
   }
-
   const custAgg={};
   for(const {rep,model,customers} of APP.custData){
     if(!custAgg[rep])custAgg[rep]={};
     const canonical=model?custModelMap[model]:null;
-    if(canonical) custAgg[rep][canonical]=(custAgg[rep][canonical]||0)+customers;
+    if(canonical)custAgg[rep][canonical]=(custAgg[rep][canonical]||0)+customers;
   }
-
-  // ── Step 4: Build per-rep mapped sales ──
-  // salesMapped[rep][planModel] = {qty, price}
   const salesMapped={};
   for(const [rep,models] of Object.entries(salesAgg)){
     salesMapped[rep]={};
@@ -1046,38 +1134,25 @@ function buildAnalyzed(){
       salesMapped[rep][pm].price+=sv.price;
     }
   }
-
-  const allReps=APP.repsList.length
-    ? APP.repsList
-    : [...new Set(APP.salesData.map(r=>r.rep))];
-
-  // ── Step 5: Build repData ──
+  const allReps=APP.repsList.length?APP.repsList:[...new Set(APP.salesData.map(r=>r.rep))];
   const repData={};
   for(const rep of allReps){
     const rd=salesMapped[rep]||{};
     const cd=custAgg[rep]||{};
-
-    // NPS = مجموع كل السعر للمندوب × NPS_MULT ، مقرّب لأقرب ألف
     const totalPrice=Object.values(rd).reduce((s,v)=>s+v.price,0);
     const npsValue=Math.round(totalPrice*NPS_MULT/1000)*1000;
-
     const items={};
     for(const m of APP.modelsOrder){
-      const qty  =(rd[m]?.qty)||0;
-      const cust =(cd[m])||0;
-      const plan =(APP.plansPerRep[rep]?.[m])||0;
-      items[m]={qty:+qty.toFixed(4), customers:cust, plan};
+      const qty=(rd[m]?.qty)||0;
+      const cust=(cd[m])||0;
+      const plan=(APP.plansPerRep[rep]?.[m])||0;
+      items[m]={qty:+qty.toFixed(4),customers:cust,plan};
     }
-
-    repData[rep]={nps:npsValue, npsRaw:+(totalPrice*NPS_MULT).toFixed(2), items};
+    repData[rep]={nps:npsValue,npsRaw:+(totalPrice*NPS_MULT).toFixed(2),items};
   }
-
   return{repData,allReps};
 }
 
-// ═══════════════════════════════════════════════════════════
-// GET TABLE DATA — ترتيب الأصناف من models_order
-// ═══════════════════════════════════════════════════════════
 function getTableData(rep){
   const {repData,allReps}=APP.analyzed;
   return APP.modelsOrder.map(m=>{
@@ -1085,7 +1160,7 @@ function getTableData(rep){
     const reps=rep==='all'?allReps:[rep];
     for(const r of reps){
       const d=repData[r]?.items[m]||{qty:0,customers:0,plan:0};
-      qty+=d.qty; cust+=d.customers;
+      qty+=d.qty;cust+=d.customers;
       plan+=d.plan||(APP.plansPerRep[r]?.[m]||0);
     }
     const pct=plan>0?(qty/plan*100):0;
@@ -1107,44 +1182,31 @@ function renderDash(){
   const doneWD=countDoneWD(year,month,curDay);
   const remWD=Math.max(0,totalWD-doneWD);
   document.getElementById('wdInfo').textContent=`أيام عمل: ${totalWD} · مضى: ${doneWD} · متبقي: ${remWD}`;
-
   const td=getTableData(APP.currentRep);
   const totalQty=td.reduce((s,r)=>s+r.qty,0);
   const totalPlan=td.reduce((s,r)=>s+r.plan,0);
   const totalPct=totalPlan>0?(totalQty/totalPlan*100):0;
-
-  // ── NPS Run Rate — يستخدم خطة NPS المباشرة من صف NPS في ملف الخطط ──
-  const repsForNPS = APP.currentRep==='all' ? allReps : [APP.currentRep];
-  const npsAchieved = repsForNPS.reduce((s,r)=>s+(repData[r]?.nps||0),0);
-  // خطة NPS = مجموع خطط NPS من صف NPS مباشرة (APP.npsPlans)
-  const npsPlan = repsForNPS.reduce((s,r)=>s+(APP.npsPlans[r]||0),0);
-  const npsDailyRate = doneWD>0 ? npsAchieved/doneWD : 0;
-  const npsProjected = npsDailyRate*totalWD;
-  const npsProjPct   = npsPlan>0 ? (npsProjected/npsPlan*100) : 0;
-  const npsGapGreen  = Math.max(0, npsPlan*0.7 - npsAchieved);
-
-  // للكميات (الجدول)
-  const dailyRateQty=doneWD>0?totalQty/doneWD:0;
-  const projectedQty=dailyRateQty*totalWD;
-  const projPctQty=totalPlan>0?(projectedQty/totalPlan*100):0;
-
-  // حالة Run Rate بناءً على NPS
+  const repsForNPS=APP.currentRep==='all'?allReps:[APP.currentRep];
+  const npsAchieved=repsForNPS.reduce((s,r)=>s+(repData[r]?.nps||0),0);
+  const npsPlan=repsForNPS.reduce((s,r)=>s+(APP.npsPlans[r]||0),0);
+  const npsDailyRate=doneWD>0?npsAchieved/doneWD:0;
+  const npsProjected=npsDailyRate*totalWD;
+  const npsProjPct=npsPlan>0?(npsProjected/npsPlan*100):0;
+  const npsGapGreen=Math.max(0,npsPlan*0.7-npsAchieved);
   const rrSt=npsProjPct>=100?'good':npsProjPct>=70?'warn':'bad';
   const rrIcon=npsProjPct>=100?'⬆️':npsProjPct>=70?'➡️':'⬇️';
 
-  // Run Rate
   document.getElementById('rrCards').innerHTML=`
     <div class="rrc"><div class="rrl">متوسط NPS يومي</div><div class="rrv">${F0(npsDailyRate)}</div><div class="rrs2">جنيه / يوم عمل</div></div>
     <div class="rrc">
       <div class="rrl">توقع NPS نهاية الشهر</div>
-      <div class="rrv" style="color:${rrSt==='good'?'var(--accent3)':rrSt==='warn'?'var(--warn)':'var(--danger)'}">${F0(npsProjected)}</div>
+      <div class="rrv" style="color:${rrSt==='good'?'var(--success)':rrSt==='warn'?'var(--warn)':'var(--danger)'}">${F0(npsProjected)}</div>
       <div class="rrs2">${npsProjPct.toFixed(1)}% من خطة NPS</div>
       <div class="rrbadge ${rrSt}">${rrIcon} ${rrSt==='good'?'سيتجاوز الهدف':rrSt==='warn'?'على الحافة':'تحت الهدف'}</div>
     </div>
     <div class="rrc"><div class="rrl">أيام عمل متبقية</div><div class="rrv">${remWD}</div><div class="rrs2">من أصل ${totalWD}</div></div>
     <div class="rrc"><div class="rrl">NPS متبقي للأخضر 70%</div><div class="rrv" style="color:var(--warn)">${F0(npsGapGreen)}</div><div class="rrs2">للوصول لمنطقة الأمان</div></div>`;
 
-  // Stats — بدون إجمالي العملاء
   const stRrCls=rrSt==='good'?'gn':rrSt==='warn'?'ye':'re';
   document.getElementById('statsRow').innerHTML=`
     <div class="sc bl"><div class="sv">${F0(totalQty)}</div><div class="sl">الكميات المحققة</div></div>
@@ -1153,37 +1215,32 @@ function renderDash(){
     <div class="sc ye"><div class="sv">${td.length}</div><div class="sl">عدد الأصناف</div></div>
     <div class="sc ${stRrCls}"><div class="sv">${npsProjPct.toFixed(0)}%</div><div class="sl">توقع NPS الشهر</div></div>`;
 
-  // Productivity Table — مع عمود المتبقي للأخضر
   document.getElementById('prodTBody').innerHTML=td.map((r,i)=>{
-    const pc=r.pct>=100?'var(--accent3)':r.pct>=70?'var(--warn)':'var(--danger)';
+    const pc=r.pct>=100?'var(--success)':r.pct>=70?'var(--warn)':'var(--danger)';
     const fp=Math.min(r.pct,100);
     const prod=r.cust>0?(r.qty/r.cust).toFixed(2):'—';
     const divPct=r.plan>0?Math.min(100,Math.round(r.qty/r.plan*100)):0;
-    // متبقي للأخضر (70% من الخطة)
     const gap70=r.plan>0?Math.max(0,r.plan*0.7-r.qty):0;
-    const gapColor=gap70===0?'var(--accent3)':'var(--warn)';
     const gapTxt=gap70===0
-      ?`<span style="color:var(--accent3);font-size:10px">✅ أخضر</span>`
-      :`<span class="n" style="color:${gapColor};font-size:11px">${F2(gap70)}</span>`;
+      ?`<span style="color:var(--success);font-size:10px">✅ أخضر</span>`
+      :`<span class="n" style="color:var(--warn);font-size:11px">${F2(gap70)}</span>`;
     return`<tr>
-      <td class="n" style="color:var(--text-dim)">${i+1}</td>
+      <td class="n" style="color:var(--text-muted)">${i+1}</td>
       <td style="font-weight:600">${r.main}</td>
       <td style="color:var(--text-muted);font-size:11px">${r.sub}</td>
-      <td class="n" style="color:var(--accent)">${F2(r.qty)}</td>
+      <td class="n" style="color:var(--accent-g)">${F2(r.qty)}</td>
       <td class="n">${r.plan>0?F0(r.plan):'—'}</td>
-      <td>${r.plan>0?`<div class="pw"><div class="pbg"><div class="pf" style="width:${fp}%;background:${pc}"></div></div><span class="pp" style="color:${pc}">${r.pct.toFixed(1)}%</span></div>`:'<span style="color:var(--text-dim);font-size:10px">لا خطة</span>'}</td>
+      <td>${r.plan>0?`<div class="pw"><div class="pbg"><div class="pf" style="width:${fp}%;background:${pc}"></div></div><span class="pp" style="color:${pc}">${r.pct.toFixed(1)}%</span></div>`:'<span style="color:var(--text-muted);font-size:10px">لا خطة</span>'}</td>
       <td class="n" style="color:var(--accent2)">${r.cust||'—'}</td>
-      <td class="n" style="color:var(--accent)">${prod}</td>
-      <td><div class="divb"><div class="divbg"><div class="divf" style="width:${divPct}%"></div></div><span style="font-size:10px;color:var(--text-dim);min-width:28px">${divPct}%</span></div></td>
+      <td class="n" style="color:var(--accent-g)">${prod}</td>
+      <td><div class="divb"><div class="divbg"><div class="divf" style="width:${divPct}%"></div></div><span style="font-size:10px;color:var(--text-muted);min-width:28px">${divPct}%</span></div></td>
       <td>${r.plan>0?gapTxt:'—'}</td>
     </tr>`;
   }).join('');
 
-  // Gap Chart
   const gapData=[...td].filter(r=>r.plan>0).sort((a,b)=>b.plan-a.plan).slice(0,15);
   renderGapChart(gapData);
 
-  // Pie Charts — بدون qty=0 في الأقل 5
   const nzQty=td.filter(r=>r.qty>0).sort((a,b)=>b.qty-a.qty);
   const nzCust=td.filter(r=>r.cust>0).sort((a,b)=>b.cust-a.cust);
   renderPie('cT5S',nzQty.slice(0,5).map(r=>trim14(r.name)),nzQty.slice(0,5).map(r=>r.qty),'top');
@@ -1196,38 +1253,32 @@ function renderDash(){
 }
 
 // ═══════════════════════════════════════════════════════════
-// RENDER NPS — ترتيب المناديب بنسبة المحقق% تنازلياً
+// RENDER NPS
 // ═══════════════════════════════════════════════════════════
 function renderNPS(){
   if(!APP.analyzed)return;
   const {repData,allReps}=APP.analyzed;
-
-  // خطة NPS لكل مندوب = مباشرة من صف NPS في ملف الخطط
   const npsRows=allReps.map(rep=>{
     const d=repData[rep]||{nps:0};
     const val=d.nps||0;
-    const plan=APP.npsPlans[rep]||0;   // الرقم المباشر من صف NPS
+    const plan=APP.npsPlans[rep]||0;
     const pct=plan>0?(val/plan*100):null;
     const sold=APP.modelsOrder.filter(m=>(d.items?.[m]?.qty||0)>0).length;
     return{rep,val,plan,pct,sold,total:APP.modelsOrder.length};
   });
-
-  // ترتيب بنسبة الإنجاز% تنازلياً (null في الآخر)
   npsRows.sort((a,b)=>{
     if(a.pct===null&&b.pct===null)return b.val-a.val;
     if(a.pct===null)return 1;
     if(b.pct===null)return -1;
     return b.pct-a.pct;
   });
-
   const totalVal=npsRows.reduce((s,r)=>s+r.val,0);
   const totalPlan=npsRows.reduce((s,r)=>s+r.plan,0);
   const totalPct=totalPlan>0?(totalVal/totalPlan*100):null;
-  const pcColor=totalPct===null?'var(--accent)':totalPct>=70?'var(--accent3)':totalPct>=50?'var(--warn)':'var(--danger)';
+  const pcColor=totalPct===null?'var(--accent-g)':totalPct>=70?'var(--success)':totalPct>=50?'var(--warn)':'var(--danger)';
 
-  // Totals: الخطة + المحقق + النسبة + عدد المناديب
   document.getElementById('npsTotals').innerHTML=`
-    <div class="ntitem"><div class="ntv" style="color:var(--accent)">${F0(totalVal)}</div><div class="ntl">إجمالي المحقق</div></div>
+    <div class="ntitem"><div class="ntv" style="color:var(--accent-g)">${F0(totalVal)}</div><div class="ntl">إجمالي المحقق</div></div>
     <div class="nt-div"></div>
     <div class="ntitem"><div class="ntv">${F0(totalPlan)}</div><div class="ntl">إجمالي الخطط</div></div>
     <div class="nt-div"></div>
@@ -1235,11 +1286,10 @@ function renderNPS(){
     <div class="nt-div"></div>
     <div class="ntitem"><div class="ntv">${npsRows.length}</div><div class="ntl">عدد المناديب</div></div>`;
 
-  // Leaderboard
   const RK=['🥇','🥈','🥉'];
   const RC=['gold','silver','bronze'];
   document.getElementById('lbEl').innerHTML=npsRows.map((r,i)=>{
-    const pc=r.pct===null?'var(--accent)':r.pct>=70?'var(--accent3)':r.pct>=50?'var(--warn)':'var(--danger)';
+    const pc=r.pct===null?'var(--accent-g)':r.pct>=70?'var(--success)':r.pct>=50?'var(--warn)':'var(--danger)';
     const arrow=r.pct===null?'':r.pct>=70?'▲':r.pct>=50?'▶':'▼';
     return`<div class="lbr">
       <div class="lbrank ${RC[i]||''}">${RK[i]||i+1}</div>
@@ -1249,37 +1299,35 @@ function renderNPS(){
     </div>`;
   }).join('');
 
-  // Diversity chart
-  if(APP.charts.div) APP.charts.div.destroy();
+  if(APP.charts.div)APP.charts.div.destroy();
+  const isDark=!document.body.classList.contains('light');
   const dctx=document.getElementById('cDiversity').getContext('2d');
   const divD=npsRows.map(r=>r.total>0?Math.round(r.sold/r.total*100):0);
   APP.charts.div=new Chart(dctx,{
     type:'bar',
     data:{labels:npsRows.map(r=>r.rep),
       datasets:[{label:'%',data:divD,
-        backgroundColor:divD.map(v=>v>=70?'rgba(16,185,129,.7)':v>=50?'rgba(245,158,11,.7)':'rgba(239,68,68,.7)'),
-        borderRadius:6}]},
+        backgroundColor:divD.map(v=>v>=70?'rgba(0,166,61,.7)':v>=50?'rgba(245,158,11,.7)':'rgba(255,33,87,.7)'),
+        borderRadius:8}]},
     options:{responsive:true,maintainAspectRatio:false,
       plugins:{legend:{display:false},tooltip:{titleFont:{family:'Cairo'},callbacks:{label:c=>`تنوع: ${c.parsed.y}%`}}},
       scales:{
-        x:{ticks:{color:'var(--text-dim)',font:{family:'Cairo',size:10},maxRotation:35,minRotation:35,autoSkip:false},grid:{color:'rgba(100,116,139,.15)'}},
-        y:{max:100,ticks:{color:'var(--text-dim)',font:{family:'Tajawal',size:10},callback:v=>v+'%'},grid:{color:'rgba(100,116,139,.15)'}}
+        x:{ticks:{color:isDark?'#6c7a99':'#8a95a8',font:{family:'Cairo',size:10},maxRotation:35,minRotation:35,autoSkip:false},grid:{color:isDark?'rgba(45,55,72,.5)':'rgba(228,232,239,.8)'}},
+        y:{max:100,ticks:{color:isDark?'#6c7a99':'#8a95a8',font:{family:'Tajawal',size:10},callback:v=>v+'%'},grid:{color:isDark?'rgba(45,55,72,.5)':'rgba(228,232,239,.8)'}}
       }}
   });
 
-  // NPS Cards — مرتبة بنسبة الإنجاز
   document.getElementById('npsCards').innerHTML=npsRows.map(r=>{
     const cls=r.pct===null?'gn':r.pct>=70?'gn':r.pct>=50?'ye':'re';
-    const pCls=cls;
     const arrow=r.pct===null?'':r.pct>=70?'⬆️':r.pct>=50?'➡️':'⬇️';
     const toGreen=r.plan>0?Math.max(0,r.plan*.7-r.val):0;
     return`<div class="npsc ${cls}">
       <div class="npsname">${r.rep}<span>${arrow}</span></div>
-      <div class="npspct ${pCls}">${r.pct!==null?r.pct.toFixed(1)+'%':'—'}</div>
+      <div class="npspct ${cls}">${r.pct!==null?r.pct.toFixed(1)+'%':'—'}</div>
       <div class="npsrow"><span class="npslbl">المحقق:</span><span class="npsval">${F0(r.val)}</span></div>
       ${r.plan>0?`<div class="npsrow"><span class="npslbl">الخطة:</span><span class="npsval">${F0(r.plan)}</span></div>`:''}
       <div class="npsrow"><span class="npslbl">أصناف مباعة:</span><span class="npsval">${r.sold}/${r.total}</span></div>
-      ${toGreen>0?`<div class="npstg">⚡ للأخضر: ${F0(toGreen)}</div>`:`<div class="npstg" style="color:var(--accent3)">✅ منطقة الأمان</div>`}
+      ${toGreen>0?`<div class="npstg">⚡ للأخضر: ${F0(toGreen)}</div>`:`<div class="npstg" style="color:var(--success)">✅ منطقة الأمان</div>`}
     </div>`;
   }).join('');
 
@@ -1291,16 +1339,16 @@ function renderNPS(){
 // CHARTS
 // ═══════════════════════════════════════════════════════════
 function renderGapChart(data){
-  if(APP.charts.gap) APP.charts.gap.destroy();
-  const isDark=document.documentElement.getAttribute('data-theme')!=='light';
-  const gc=isDark?'rgba(100,116,139,.15)':'rgba(148,163,184,.2)';
-  const tc=isDark?'#64748b':'#64748b';
+  if(APP.charts.gap)APP.charts.gap.destroy();
+  const isDark=!document.body.classList.contains('light');
+  const gc=isDark?'rgba(45,55,72,.5)':'rgba(228,232,239,.8)';
+  const tc=isDark?'#6c7a99':'#8a95a8';
   APP.charts.gap=new Chart(document.getElementById('cGap').getContext('2d'),{
     type:'bar',
     data:{labels:data.map(r=>trim14(r.name)),
       datasets:[
-        {label:'الخطة',data:data.map(r=>r.plan),backgroundColor:'rgba(124,58,237,.45)',borderColor:'#7c3aed',borderWidth:1,borderRadius:4},
-        {label:'المحقق',data:data.map(r=>r.qty),backgroundColor:'rgba(0,212,255,.6)',borderColor:isDark?'#00d4ff':'#0284c7',borderWidth:1,borderRadius:4}
+        {label:'الخطة',data:data.map(r=>r.plan),backgroundColor:'rgba(124,58,237,.45)',borderColor:'#7c3aed',borderWidth:1,borderRadius:6},
+        {label:'المحقق',data:data.map(r=>r.qty),backgroundColor:'rgba(0,160,160,.6)',borderColor:'#00a0a0',borderWidth:1,borderRadius:6}
       ]},
     options:{responsive:true,maintainAspectRatio:false,
       plugins:{legend:{labels:{color:tc,font:{family:'Cairo',size:11}}},
@@ -1313,16 +1361,16 @@ function renderGapChart(data){
 }
 
 function renderPie(id,labels,data,type){
-  if(APP.charts[id]) APP.charts[id].destroy();
+  if(APP.charts[id])APP.charts[id].destroy();
   if(!data.length||!data.some(v=>v>0))return;
-  const isDark=document.documentElement.getAttribute('data-theme')!=='light';
+  const isDark=!document.body.classList.contains('light');
   const colors=type==='top'?CT:CB;
-  const bg=isDark?'#0f1726':'#ffffff';
+  const bg=isDark?'#1e2330':'#ffffff';
   APP.charts[id]=new Chart(document.getElementById(id).getContext('2d'),{
     type:'doughnut',
     data:{labels,datasets:[{data,backgroundColor:colors,borderColor:bg,borderWidth:3,hoverOffset:7}]},
     options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{position:'bottom',labels:{color:isDark?'#94a3b8':'#475569',font:{family:'Cairo',size:11,weight:'600'},padding:10,boxWidth:12,
+      plugins:{legend:{position:'bottom',labels:{color:isDark?'#6c7a99':'#8a95a8',font:{family:'Cairo',size:11,weight:'600'},padding:10,boxWidth:12,
         generateLabels:c=>c.data.labels.map((l,i)=>({text:l,fillStyle:colors[i],strokeStyle:colors[i],lineWidth:0,hidden:false,index:i}))}},
         tooltip:{titleFont:{family:'Cairo'},bodyFont:{family:'Tajawal'},callbacks:{label:c=>` ${F2(c.parsed)}`}}},
       cutout:'54%'}
@@ -1361,173 +1409,137 @@ function countDoneWD(year,month,curDay){return getWDList(year,month).filter(d=>d
 // ═══════════════════════════════════════════════════════════
 // TAB 4 — CUSTOMER COVERAGE
 // ═══════════════════════════════════════════════════════════
-const COV_EXCLUDED_REPS   = ['مبيعات عامة الوفاق','محاسب الوفاق','مبيعاتعامهالوفاق','مبيعات عامه الوفاق'];
-const COV_ALLOWED_SECTORS = ['تجزئة','جملة','بقالة','Key Retail - KR'];
-const COV_SECTOR_TARGETS  = {'تجزئة':1200,'جملة':60,'بقالة':60,'Key Retail - KR':25};
-const COV_REP_TARGETS     = {'تجزئة':300,'جملة':60,'بقالة':60,'Key Retail - KR':25};
+const COV_EXCLUDED_REPS=['مبيعات عامة الوفاق','محاسب الوفاق','مبيعاتعامهالوفاق','مبيعات عامه الوفاق'];
+const COV_ALLOWED_SECTORS=['تجزئة','جملة','بقالة','Key Retail - KR'];
+const COV_SECTOR_TARGETS={'تجزئة':1200,'جملة':60,'بقالة':60,'Key Retail - KR':25};
+const COV_REP_TARGETS={'تجزئة':300,'جملة':60,'بقالة':60,'Key Retail - KR':25};
 
-// Active sub-state
-let covMode = 'sector';    // 'sector' | 'rep'
-let covSecActive = '';
-let covRepActive = '';
+let covMode='sector';
+let covSecActive='';
+let covRepActive='';
 
 function renderCOV(){
-  // Build structured data from APP.custData
-  // Each row: {rep, model, customers} — model = "قطاع البيع" is in 'sector' col of source
-  // BUT: in handleCustFile, cModel = col index of "مجموع اصناف" (product group)
-  // and there's also a sector column — however APP.custData only stores {rep, model, customers}
-  // The 'model' field in custData = مجموع اصناف (product). Sector is NOT stored in APP.custData.
-  // We need to re-parse from the raw custData but sector info is lost.
-  // Solution: Use APP.covRaw that we'll populate in handleCustFile patch.
-  // If covRaw not available, show message.
-
-  if(!APP.covRaw || APP.covRaw.length === 0){
+  if(!APP.covRaw||APP.covRaw.length===0){
     document.getElementById('cov-empty').style.display='';
     document.getElementById('cov-content').style.display='none';
     return;
   }
   document.getElementById('cov-empty').style.display='none';
   document.getElementById('cov-content').style.display='block';
-
   buildCovSectorTabs();
   buildCovRepTabs();
   covSwitch(covMode);
 }
 
 function buildCovSectorTabs(){
-  const sectors = COV_ALLOWED_SECTORS.filter(s => APP.covRaw.some(r => r.sector === s));
-  const tabsEl = document.getElementById('cov-sec-tabs');
-  tabsEl.innerHTML = '';
-  if(!covSecActive || !sectors.includes(covSecActive)) covSecActive = sectors[0] || '';
-  sectors.forEach(sec => {
-    const b = document.createElement('button');
-    b.className = 'cov-sec-btn' + (sec === covSecActive ? ' on' : '');
-    b.textContent = sec;
-    b.onclick = () => { covSecActive = sec; renderCovSecContent(); updateCovSecTabs(); };
+  const sectors=COV_ALLOWED_SECTORS.filter(s=>APP.covRaw.some(r=>r.sector===s));
+  const tabsEl=document.getElementById('cov-sec-tabs');
+  tabsEl.innerHTML='';
+  if(!covSecActive||!sectors.includes(covSecActive))covSecActive=sectors[0]||'';
+  sectors.forEach(sec=>{
+    const b=document.createElement('button');
+    b.className='cov-sec-btn'+(sec===covSecActive?' on':'');
+    b.textContent=sec;
+    b.onclick=()=>{covSecActive=sec;renderCovSecContent();updateCovSecTabs();};
     tabsEl.appendChild(b);
   });
   renderCovSecContent();
 }
-
 function updateCovSecTabs(){
-  document.querySelectorAll('#cov-sec-tabs .cov-sec-btn').forEach(b => {
-    b.classList.toggle('on', b.textContent === covSecActive);
+  document.querySelectorAll('#cov-sec-tabs .cov-sec-btn').forEach(b=>{
+    b.classList.toggle('on',b.textContent===covSecActive);
   });
 }
-
 function renderCovSecContent(){
-  const data = APP.covRaw.filter(r => r.sector === covSecActive);
-  const target = COV_SECTOR_TARGETS[covSecActive] || 60;
-  document.getElementById('cov-sec-content').innerHTML = buildCovProductTable(data, target, covSecActive, 'sector');
+  const data=APP.covRaw.filter(r=>r.sector===covSecActive);
+  const target=COV_SECTOR_TARGETS[covSecActive]||60;
+  document.getElementById('cov-sec-content').innerHTML=buildCovProductTable(data,target,covSecActive,'sector');
 }
 
 function buildCovRepTabs(){
-  const reps = [...new Set(APP.covRaw.map(r => r.rep))].sort();
-  const tabsEl = document.getElementById('cov-rep-tabs');
-  tabsEl.innerHTML = '';
-  if(!covRepActive || !reps.includes(covRepActive)) covRepActive = reps[0] || '';
-  reps.forEach(rep => {
-    const b = document.createElement('button');
-    b.className = 'cov-sec-btn' + (rep === covRepActive ? ' on' : '');
-    b.textContent = rep;
-    b.onclick = () => { covRepActive = rep; renderCovRepContent(); updateCovRepTabs(); };
+  const reps=[...new Set(APP.covRaw.map(r=>r.rep))].sort();
+  const tabsEl=document.getElementById('cov-rep-tabs');
+  tabsEl.innerHTML='';
+  if(!covRepActive||!reps.includes(covRepActive))covRepActive=reps[0]||'';
+  reps.forEach(rep=>{
+    const b=document.createElement('button');
+    b.className='cov-sec-btn'+(rep===covRepActive?' on':'');
+    b.textContent=rep;
+    b.onclick=()=>{covRepActive=rep;renderCovRepContent();updateCovRepTabs();};
     tabsEl.appendChild(b);
   });
   renderCovRepContent();
 }
-
 function updateCovRepTabs(){
-  document.querySelectorAll('#cov-rep-tabs .cov-sec-btn').forEach(b => {
-    b.classList.toggle('on', b.textContent === covRepActive);
+  document.querySelectorAll('#cov-rep-tabs .cov-sec-btn').forEach(b=>{
+    b.classList.toggle('on',b.textContent===covRepActive);
   });
 }
 
 function renderCovRepContent(){
-  const repData = APP.covRaw.filter(r => r.rep === covRepActive);
-  const bySec = {};
-  repData.forEach(r => { (bySec[r.sector] = bySec[r.sector] || []).push(r); });
-
-  // ── ملخص القطاعات — إدخال يدوي لعدد العملاء ──
-  let html = '<div style="margin-bottom:16px">';
-  html += `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+  const repData=APP.covRaw.filter(r=>r.rep===covRepActive);
+  const bySec={};
+  repData.forEach(r=>{(bySec[r.sector]=bySec[r.sector]||[]).push(r);});
+  let html='<div style="margin-bottom:16px">';
+  html+=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
     <div style="font-size:11px;font-weight:700;color:var(--text-muted)">📊 ملخص القطاعات — أدخل عدد العملاء الفعلي</div>
-    <button onclick="saveCovRepInputs('${covRepActive}')" style="background:rgba(16,185,129,.15);border:1px solid rgba(16,185,129,.3);color:#10b981;padding:5px 14px;border-radius:8px;font-family:'Cairo',sans-serif;font-size:11px;font-weight:700;cursor:pointer">💾 حفظ</button>
+    <button onclick="saveCovRepInputs('${covRepActive}')" style="background:rgba(0,166,61,.15);border:1px solid rgba(0,166,61,.3);color:var(--success);padding:6px 16px;border-radius:10px;font-family:'Cairo',sans-serif;font-size:11px;font-weight:700;cursor:pointer">💾 حفظ</button>
   </div>`;
-  html += '<table class="cov-tbl"><thead><tr><th>القطاع</th><th>عدد العملاء الفعلي</th><th>الهدف</th><th>نسبة التغطية</th><th>الفجوة</th><th>الحالة</th></tr></thead><tbody>';
-
-  Object.entries(bySec).forEach(([sec]) => {
-    const target  = COV_REP_TARGETS[sec] || 60;
-    const savedVal = getCovRepVal(covRepActive, sec);
-    const achieved = savedVal !== null ? savedVal : 0;
-    const pct      = Math.min(Math.round(achieved / target * 100), 999);
-    const gap      = Math.max(target - achieved, 0);
-    const barW     = Math.min(pct, 100);
-    const [pillCls, barClr, statusTxt] = pct >= 80
-      ? ['cov-high','#10b981','✅ ممتاز']
-      : pct >= 50 ? ['cov-mid','#f59e0b','⚠️ متوسط']
-      : ['cov-low','#ef4444','❌ ضعيف'];
-    const inputId = `covinp_${covRepActive}_${sec}`.replace(/\s+/g,'_').replace(/-/g,'_');
-    html += `<tr id="covrow_${inputId}">
+  html+='<div style="overflow-x:auto"><table class="cov-tbl"><thead><tr><th>القطاع</th><th>عدد العملاء الفعلي</th><th>الهدف</th><th>نسبة التغطية</th><th>الفجوة</th><th>الحالة</th></tr></thead><tbody>';
+  Object.entries(bySec).forEach(([sec])=>{
+    const target=COV_REP_TARGETS[sec]||60;
+    const savedVal=getCovRepVal(covRepActive,sec);
+    const achieved=savedVal!==null?savedVal:0;
+    const pct=Math.min(Math.round(achieved/target*100),999);
+    const gap=Math.max(target-achieved,0);
+    const barW=Math.min(pct,100);
+    const[pillCls,barClr,statusTxt]=pct>=80?['cov-high','#00A63D','✅ ممتاز']:pct>=50?['cov-mid','#f59e0b','⚠️ متوسط']:['cov-low','#FF2157','❌ ضعيف'];
+    const inputId=`covinp_${covRepActive}_${sec}`.replace(/\s+/g,'_').replace(/-/g,'_');
+    html+=`<tr id="covrow_${inputId}">
       <td><strong>${sec}</strong></td>
-      <td>
-        <input id="${inputId}"
-          type="number" min="0" value="${achieved}"
-          oninput="updateCovRow('${inputId}','${covRepActive}','${sec}',${target})"
-          style="width:80px;background:var(--input-bg);border:1px solid var(--border2);color:var(--text);border-radius:6px;padding:4px 8px;font-family:'Cairo',sans-serif;font-size:12px;text-align:center">
-      </td>
+      <td><input id="${inputId}" type="number" min="0" value="${achieved}"
+        oninput="updateCovRow('${inputId}','${covRepActive}','${sec}',${target})"
+        style="width:80px;background:var(--surface-2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:5px 9px;font-family:'Cairo',sans-serif;font-size:12px;text-align:center;box-shadow:var(--nm-inset);outline:none;"></td>
       <td>${target}</td>
-      <td id="covpct_${inputId}"><div style="display:flex;align-items:center;gap:6px">
+      <td><div style="display:flex;align-items:center;gap:6px">
         <div class="cov-mbar-bg"><div class="cov-mbar-fill" id="covbar_${inputId}" style="width:${barW}%;background:${barClr}"></div></div>
         <span class="cov-pill ${pillCls}" id="covpill_${inputId}">${pct}%</span>
       </div></td>
-      <td id="covgap_${inputId}" style="color:${gap>0?'#ef4444':'#10b981'};font-weight:700">${gap>0?gap+' عميل':'✅'}</td>
-      <td id="covstat_${inputId}" style="font-size:11px;font-weight:700;color:${pct>=80?'#10b981':pct>=50?'#f59e0b':'#ef4444'}">${statusTxt}</td>
+      <td id="covgap_${inputId}" style="color:${gap>0?'var(--danger)':'var(--success)'};font-weight:700">${gap>0?gap+' عميل':'✅'}</td>
+      <td id="covstat_${inputId}" style="font-size:11px;font-weight:700;color:${pct>=80?'var(--success)':pct>=50?'var(--warn)':'var(--danger)'}">${statusTxt}</td>
     </tr>`;
   });
-  html += '</tbody></table></div>';
-
-  // Product tables per sector (unchanged)
-  Object.entries(bySec).forEach(([sec, rows]) => {
-    const target = COV_REP_TARGETS[sec] || 60;
-    html += buildCovProductTable(rows, target, sec, 'rep');
+  html+='</tbody></table></div></div>';
+  Object.entries(bySec).forEach(([sec,rows])=>{
+    const target=COV_REP_TARGETS[sec]||60;
+    html+=buildCovProductTable(rows,target,sec,'rep');
   });
-
-  document.getElementById('cov-rep-content').innerHTML = html;
+  document.getElementById('cov-rep-content').innerHTML=html;
 }
 
-function buildCovProductTable(data, target, label, mode){
-  // Aggregate by product
-  const byProd = {};
-  data.forEach(r => {
-    byProd[r.product] = (byProd[r.product] || 0) + r.customers;
-  });
-  const prodRows = Object.entries(byProd)
-    .map(([p, c]) => ({p, customers: c}))
-    .sort((a,b) => b.customers - a.customers);
-
-  let html = `<div style="font-size:11px;font-weight:700;color:var(--text-muted);margin-bottom:8px">
-    📦 ${mode === 'rep' ? 'أصناف قطاع ' + label : 'الأصناف — قطاع ' + label}
-    <span style="font-weight:400;color:var(--text-dim)">(مستهدف ${target} عميل/صنف)</span>
+function buildCovProductTable(data,target,label,mode){
+  const byProd={};
+  data.forEach(r=>{byProd[r.product]=(byProd[r.product]||0)+r.customers;});
+  const prodRows=Object.entries(byProd).map(([p,c])=>({p,customers:c})).sort((a,b)=>b.customers-a.customers);
+  let html=`<div style="font-size:11px;font-weight:700;color:var(--text-muted);margin-bottom:10px">
+    📦 ${mode==='rep'?'أصناف قطاع '+label:'الأصناف — قطاع '+label}
+    <span style="font-weight:400;color:var(--text-muted);opacity:.6">(مستهدف ${target} عميل/صنف)</span>
   </div>`;
-  html += '<div style="overflow-x:auto;margin-bottom:20px"><table class="cov-tbl"><thead><tr>';
-  html += '<th>#</th><th>الصنف</th><th>العملاء المتعاملين</th><th>المستهدف</th><th>نسبة التغطية</th><th>القرار</th>';
-  html += '</tr></thead><tbody>';
-
-  prodRows.forEach((row, i) => {
-    const pct = Math.min(Math.round(row.customers / target * 100), 999);
-    const barW = Math.min(pct, 100);
-    const gap  = Math.max(target - row.customers, 0);
-    const [pillCls, barClr] = pct >= 80 ? ['cov-high','#10b981'] : pct >= 50 ? ['cov-mid','#f59e0b'] : ['cov-low','#ef4444'];
-    const rankCls = i===0?'cov-r1':i===1?'cov-r2':i===2?'cov-r3':'cov-rn';
-    const decision = pct >= 90
-      ? `<span style="color:#10b981;font-size:11px">✅ تغطية ممتازة — حافظ على الزخم</span>`
-      : pct >= 70
-      ? `<span style="color:#f59e0b;font-size:11px">⚠️ جيد — باقي ${gap} عميل للهدف</span>`
-      : pct >= 50
-      ? `<span style="color:#f59e0b;font-size:11px">🔴 متوسط — ${gap} عميل فجوة، راجع الخطة</span>`
-      : `<span style="color:#ef4444;font-size:11px">❌ ضعيف — ${gap} عميل، تدخّل فوري</span>`;
-
-    html += `<tr>
+  html+='<div style="overflow-x:auto;margin-bottom:22px"><table class="cov-tbl"><thead><tr>';
+  html+='<th>#</th><th>الصنف</th><th>العملاء المتعاملين</th><th>المستهدف</th><th>نسبة التغطية</th><th>القرار</th>';
+  html+='</tr></thead><tbody>';
+  prodRows.forEach((row,i)=>{
+    const pct=Math.min(Math.round(row.customers/target*100),999);
+    const barW=Math.min(pct,100);
+    const gap=Math.max(target-row.customers,0);
+    const[pillCls,barClr]=pct>=80?['cov-high','#00A63D']:pct>=50?['cov-mid','#f59e0b']:['cov-low','#FF2157'];
+    const rankCls=i===0?'cov-r1':i===1?'cov-r2':i===2?'cov-r3':'cov-rn';
+    const decision=pct>=90
+      ?`<span style="color:var(--success);font-size:11px">✅ تغطية ممتازة — حافظ على الزخم</span>`
+      :pct>=70?`<span style="color:var(--warn);font-size:11px">⚠️ جيد — باقي ${gap} عميل للهدف</span>`
+      :pct>=50?`<span style="color:var(--warn);font-size:11px">🔴 متوسط — ${gap} عميل فجوة، راجع الخطة</span>`
+      :`<span style="color:var(--danger);font-size:11px">❌ ضعيف — ${gap} عميل، تدخّل فوري</span>`;
+    html+=`<tr>
       <td><span class="cov-rank ${rankCls}">${i+1}</span></td>
       <td>${row.p}</td>
       <td><strong>${row.customers}</strong></td>
@@ -1539,36 +1551,29 @@ function buildCovProductTable(data, target, label, mode){
       <td>${decision}</td>
     </tr>`;
   });
-  html += '</tbody></table></div>';
+  html+='</tbody></table></div>';
   return html;
 }
 
-// ── COV localStorage helpers ──
-function covStorageKey(){ return 'wafa_cov_inputs'; }
-function loadCovInputs(){ try{ return JSON.parse(localStorage.getItem(covStorageKey())||'{}'); }catch{ return {}; } }
-function saveCovInputs(data){ localStorage.setItem(covStorageKey(), JSON.stringify(data)); }
-function getCovRepVal(rep, sec){
-  const all = loadCovInputs();
-  const v = all?.[rep]?.[sec];
-  return (v !== undefined && v !== null) ? v : null;
+function covStorageKey(){return'wafa_cov_inputs';}
+function loadCovInputs(){try{return JSON.parse(localStorage.getItem(covStorageKey())||'{}');}catch{return{};}}
+function saveCovInputs(data){localStorage.setItem(covStorageKey(),JSON.stringify(data));}
+function getCovRepVal(rep,sec){
+  const all=loadCovInputs();
+  const v=all?.[rep]?.[sec];
+  return(v!==undefined&&v!==null)?v:null;
 }
 function saveCovRepInputs(rep){
-  const all = loadCovInputs();
-  if(!all[rep]) all[rep] = {};
-  // find all inputs for this rep
-  document.querySelectorAll(`input[id^="covinp_"]`).forEach(inp => {
-    const parts = inp.id.replace('covinp_','');
-    // extract sector from end: rep name then sector name
-    const repKey = rep.replace(/\s+/g,'_').replace(/-/g,'_');
+  const all=loadCovInputs();
+  if(!all[rep])all[rep]={};
+  document.querySelectorAll(`input[id^="covinp_"]`).forEach(inp=>{
+    const repKey=rep.replace(/\s+/g,'_').replace(/-/g,'_');
     if(inp.id.startsWith('covinp_'+repKey+'_')){
-      const secKey = inp.id.replace('covinp_'+repKey+'_','').replace(/_/g,' ');
-      // try exact sector match
-      const COV_SECS = ['تجزئة','جملة','بقالة','Key Retail - KR'];
+      const COV_SECS=['تجزئة','جملة','بقالة','Key Retail - KR'];
       for(const s of COV_SECS){
-        const norm = s.replace(/\s+/g,'_').replace(/-/g,'_');
-        if(inp.id === `covinp_${repKey}_${norm}`){
-          all[rep][s] = parseInt(inp.value)||0;
-          break;
+        const norm=s.replace(/\s+/g,'_').replace(/-/g,'_');
+        if(inp.id===`covinp_${repKey}_${norm}`){
+          all[rep][s]=parseInt(inp.value)||0;break;
         }
       }
     }
@@ -1576,93 +1581,184 @@ function saveCovRepInputs(rep){
   saveCovInputs(all);
   showToast('💾 تم حفظ بيانات '+rep);
 }
-function updateCovRow(inputId, rep, sec, target){
-  const val = parseInt(document.getElementById(inputId)?.value)||0;
-  const pct = Math.min(Math.round(val/target*100),999);
-  const barW = Math.min(pct,100);
-  const gap  = Math.max(target-val,0);
-  const [pillCls,barClr,statusTxt] = pct>=80
-    ?['cov-high','#10b981','✅ ممتاز']
-    :pct>=50?['cov-mid','#f59e0b','⚠️ متوسط']
-    :['cov-low','#ef4444','❌ ضعيف'];
-  const bar  = document.getElementById('covbar_'+inputId);
-  const pill = document.getElementById('covpill_'+inputId);
-  const gapEl= document.getElementById('covgap_'+inputId);
-  const stat = document.getElementById('covstat_'+inputId);
-  if(bar)  { bar.style.width=barW+'%'; bar.style.background=barClr; }
-  if(pill) { pill.textContent=pct+'%'; pill.className='cov-pill '+pillCls; }
-  if(gapEl){ gapEl.textContent=gap>0?gap+' عميل':'✅'; gapEl.style.color=gap>0?'#ef4444':'#10b981'; }
-  if(stat) { stat.textContent=statusTxt; stat.style.color=pct>=80?'#10b981':pct>=50?'#f59e0b':'#ef4444'; }
+function updateCovRow(inputId,rep,sec,target){
+  const val=parseInt(document.getElementById(inputId)?.value)||0;
+  const pct=Math.min(Math.round(val/target*100),999);
+  const barW=Math.min(pct,100);
+  const gap=Math.max(target-val,0);
+  const[pillCls,barClr,statusTxt]=pct>=80?['cov-high','#00A63D','✅ ممتاز']:pct>=50?['cov-mid','#f59e0b','⚠️ متوسط']:['cov-low','#FF2157','❌ ضعيف'];
+  const bar=document.getElementById('covbar_'+inputId);
+  const pill=document.getElementById('covpill_'+inputId);
+  const gapEl=document.getElementById('covgap_'+inputId);
+  const stat=document.getElementById('covstat_'+inputId);
+  if(bar){bar.style.width=barW+'%';bar.style.background=barClr;}
+  if(pill){pill.textContent=pct+'%';pill.className='cov-pill '+pillCls;}
+  if(gapEl){gapEl.textContent=gap>0?gap+' عميل':'✅';gapEl.style.color=gap>0?'var(--danger)':'var(--success)';}
+  if(stat){stat.textContent=statusTxt;stat.style.color=pct>=80?'var(--success)':pct>=50?'var(--warn)':'var(--danger)';}
 }
-
 function covSwitch(mode){
-  covMode = mode;
-  document.getElementById('cov-sector-panel').style.display = mode === 'sector' ? '' : 'none';
-  document.getElementById('cov-rep-panel').style.display    = mode === 'rep'    ? '' : 'none';
-  document.getElementById('cov-tab-sector').classList.toggle('cov-subtab-on', mode === 'sector');
-  document.getElementById('cov-tab-rep').classList.toggle('cov-subtab-on', mode === 'rep');
-}
-
-
-function toggleTheme(){
-  const curr=document.documentElement.getAttribute('data-theme');
-  const next=curr==='dark'?'light':'dark';
-  document.documentElement.setAttribute('data-theme',next);
-  document.getElementById('themeBtn').textContent=next==='dark'?'🌙':'☀️';
-  localStorage.setItem('wafa_theme',next);
-  // Re-render charts with new colors
-  if(APP.analyzed){ renderDash(); if(document.getElementById('pane-nps').classList.contains('on'))renderNPS(); }
+  covMode=mode;
+  document.getElementById('cov-sector-panel').style.display=mode==='sector'?'':'none';
+  document.getElementById('cov-rep-panel').style.display=mode==='rep'?'':'none';
+  document.getElementById('cov-tab-sector').classList.toggle('cov-subtab-on',mode==='sector');
+  document.getElementById('cov-tab-rep').classList.toggle('cov-subtab-on',mode==='rep');
 }
 
 // ═══════════════════════════════════════════════════════════
-// SAVE IMAGE
+// THEME
+// ═══════════════════════════════════════════════════════════
+function toggleTheme(){
+  const isLight=document.body.classList.toggle('light');
+  document.getElementById('themeBtn').textContent=isLight?'☀️':'🌙';
+  localStorage.setItem('wafa_theme',isLight?'light':'dark');
+  if(APP.analyzed){renderDash();if(document.getElementById('pane-nps').classList.contains('on'))renderNPS();}
+}
+function toggleLoginTheme(){
+  const isLight=document.body.classList.toggle('light');
+  document.getElementById('loginThemeBtn').textContent=isLight?'☀️':'🌙';
+  localStorage.setItem('wafa_theme',isLight?'light':'dark');
+}
+
+// ═══════════════════════════════════════════════════════════
+// SAVE IMAGE — Native Canvas (الحل النهائي)
+// بدل html2canvas: نرسم الـ section على canvas يدوياً
+// هذا يحل: (1) النص العربي المتقطع (2) createPattern error
 // ═══════════════════════════════════════════════════════════
 function saveImg(id){
   showToast('⏳ جاري تحضير الصورة...');
-  const el = document.getElementById(id);
-  const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
 
-  // تحميل الخطوط أولاً قبل التصوير
-  document.fonts.ready.then(() => {
-    html2canvas(el, {
-      backgroundColor: isDark ? '#080d18' : '#f1f5f9',
-      scale: 3,
+  const srcEl   = document.getElementById(id);
+  const isDark  = !document.body.classList.contains('light');
+  const BG      = isDark ? '#1e2330' : '#f0f2f5';
+  const SC      = 2; // scale factor للجودة
+
+  // ── اجمع كل الـ chart canvases كـ dataURL قبل أي حاجة ──
+  const chartImgs = {};
+  srcEl.querySelectorAll('canvas[id]').forEach(c => {
+    try {
+      if (c.width > 0 && c.height > 0)
+        chartImgs[c.id] = { url: c.toDataURL('image/png'), w: c.offsetWidth, h: c.offsetHeight,
+          left: c.getBoundingClientRect().left - srcEl.getBoundingClientRect().left,
+          top:  c.getBoundingClientRect().top  - srcEl.getBoundingClientRect().top };
+    } catch(_) {}
+  });
+
+  // ── الطريقة: html2canvas مع إخفاء كل canvas + رسم chart imgs فوقها يدوياً ──
+  // أخفِ الـ canvases مؤقتاً
+  const hidden = [];
+  srcEl.querySelectorAll('canvas').forEach(c => {
+    hidden.push({c, d: c.style.display});
+    c.style.display = 'none';
+  });
+
+  const restore = () => hidden.forEach(({c, d}) => c.style.display = d);
+
+  // حوّل chartImgs URLs لـ Image objects
+  const loadChartImages = () => Promise.all(
+    Object.values(chartImgs).map(ci => new Promise(res => {
+      const img = new Image();
+      img.onload = () => { ci.imgObj = img; res(); };
+      img.onerror = res;
+      img.src = ci.url;
+    }))
+  );
+
+  document.fonts.ready
+    .then(loadChartImages)
+    .then(() => html2canvas(srcEl, {
+      backgroundColor: BG,
+      scale: SC,
       useCORS: true,
       logging: false,
       allowTaint: false,
       foreignObjectRendering: false,
-      onclone: (clonedDoc) => {
-        // تأكد إن الخطوط محمّلة في النسخة المستنسخة
-        const style = clonedDoc.createElement('style');
-        style.innerHTML = `
-          @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Tajawal:wght@400;700;900&display=swap');
-          * { font-family: 'Cairo', 'Tajawal', Arial, sans-serif !important; }
-          .ct, .rrt, .rrl, .rrs2, .sl, thead th { white-space: nowrap !important; overflow: visible !important; }
-          td, th, .sv, .pp, .rname { overflow: visible !important; text-overflow: unset !important; white-space: nowrap !important; }
+      letterRendering: true,
+      onclone(doc) {
+        // أخفِ canvas في الـ clone
+        doc.querySelectorAll('canvas').forEach(c => c.style.display = 'none');
+
+        // ── الحل الجذري للنص العربي المتقطع ──
+        // المشكلة الجذرية: html2canvas يُعالج كل text node منفرداً
+        // فيقطع الكلمة العربية على حدود الـ bounding box للـ container
+        // الحل: نجعل كل container overflow:visible + clip:none + no max-width
+        const s = doc.createElement('style');
+        s.textContent = `
+          /* لا تقطع أي نص */
+          * {
+            font-family: 'Cairo','Tajawal',Arial,sans-serif !important;
+            text-rendering: geometricPrecision !important;
+            -webkit-font-smoothing: antialiased !important;
+            overflow: visible !important;
+            clip: auto !important;
+            clip-path: none !important;
+          }
+          /* عناصر النص: nowrap كاملة */
+          span, p, label, h1, h2, h3, h4, h5, h6, a, li, button,
+          [class*="sv"],[class*="sl"],[class*="pp"],[class*="rrv"],
+          [class*="rrl"],[class*="rrs"],[class*="rrt"],[class*="ntv"],
+          [class*="ntl"],[class*="dlabel"],[class*="ct"],[class*="ctitle"],
+          [class*="lbname"],[class*="lbval"],[class*="lbpct"],[class*="lbrank"],
+          [class*="npsname"],[class*="npslbl"],[class*="npsval"],[class*="npstg"],
+          [class*="rrbadge"],[class*="tbadge"],[class*="spill"],[class*="hsub"],
+          [class*="cov-pill"],[class*="cov-rank"],[class*="uphint"],[class*="uplbl"],
+          [class*="divb"] span, [class*="pw"] span {
+            white-space   : nowrap !important;
+            overflow      : visible !important;
+            text-overflow : clip !important;
+            word-break    : keep-all !important;
+            max-width     : none !important;
+            min-width     : 0 !important;
+            width         : auto !important;
+          }
+          /* div: no clip, no overflow hidden */
+          div {
+            overflow  : visible !important;
+            max-width : none !important;
+          }
+          /* الجداول فقط تلتف */
+          td, th {
+            white-space : normal !important;
+            word-break  : break-word !important;
+            overflow    : visible !important;
+          }
+          canvas { display: none !important; }
         `;
-        clonedDoc.head.appendChild(style);
+        doc.head.appendChild(s);
 
-        // وسّع العناصر المقطوعة
-        clonedDoc.querySelectorAll('td, th, .rname, .repname, text').forEach(node => {
-          node.style.overflow = 'visible';
-          node.style.textOverflow = 'unset';
-          node.style.whiteSpace = 'nowrap';
-        });
-
-        // SVG legend text — أصناف المخطط الدائري
-        clonedDoc.querySelectorAll('svg text, svg tspan').forEach(t => {
-          t.style.fontFamily = 'Cairo, Arial, sans-serif';
-          t.setAttribute('font-family', 'Cairo, Arial, sans-serif');
+        // SVG legend text
+        doc.querySelectorAll('svg text, svg tspan').forEach(t => {
+          t.style.fontFamily = 'Cairo,Tajawal,Arial,sans-serif';
+          t.setAttribute('font-family', 'Cairo,Tajawal,Arial,sans-serif');
+          t.style.overflow = 'visible';
         });
       }
-    }).then(canvas => {
+    }))
+    .then(mainCanvas => {
+      restore();
+
+      // ── ارسم الـ chart images فوق الـ main canvas ──
+      const ctx = mainCanvas.getContext('2d');
+      Object.values(chartImgs).forEach(ci => {
+        if (!ci.imgObj) return;
+        ctx.drawImage(
+          ci.imgObj,
+          ci.left * SC, ci.top * SC,
+          ci.w   * SC,  ci.h  * SC
+        );
+      });
+
+      // احفظ
       const a = document.createElement('a');
       a.download = `وفاء-${new Date().toLocaleDateString('ar-EG').replace(/\//g,'-')}.png`;
-      a.href = canvas.toDataURL('image/png');
+      a.href = mainCanvas.toDataURL('image/png', 1.0);
       a.click();
       showToast('✅ تم حفظ الصورة');
-    }).catch(e => showToast('❌ ' + e.message));
-  });
+    })
+    .catch(e => {
+      restore();
+      console.error('saveImg error:', e);
+      showToast('❌ ' + e.message);
+    });
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -1706,75 +1802,53 @@ function TAB(name){
 // ═══════════════════════════════════════════════════════════
 // AUTH
 // ═══════════════════════════════════════════════════════════
-const AUTH = { user: 'waac', pass: 'm123' };
+const AUTH={user:'waac',pass:'m123'};
 
 function doLogin(){
-  const u = document.getElementById('loginUser').value.trim();
-  const p = document.getElementById('loginPass').value;
-  const errEl = document.getElementById('loginErr');
-  if(u === AUTH.user && p === AUTH.pass){
+  const u=document.getElementById('loginUser').value.trim();
+  const p=document.getElementById('loginPass').value;
+  const errEl=document.getElementById('loginErr');
+  if(u===AUTH.user&&p===AUTH.pass){
     errEl.classList.remove('show');
     sessionStorage.setItem('wafa_auth','1');
     revealApp();
-  } else {
+  }else{
     errEl.classList.add('show');
     document.getElementById('loginPass').value='';
     document.getElementById('loginPass').focus();
-    // shake animation
-    const card = document.querySelector('.login-card');
-    card.style.animation='none';
-    card.offsetHeight; // reflow
+    const card=document.querySelector('.login-card');
+    card.style.animation='none';card.offsetHeight;
     card.style.animation='loginShake .35s ease';
     setTimeout(()=>card.style.animation='',400);
   }
 }
 
 function revealApp(){
-  const ls = document.getElementById('login-screen');
-  ls.style.transition='opacity .4s ease';
-  ls.style.opacity='0';
-  setTimeout(()=>{ ls.style.display='none'; document.body.classList.add('app-revealed'); },400);
+  const ls=document.getElementById('login-screen');
+  ls.style.transition='opacity .4s ease';ls.style.opacity='0';
+  setTimeout(()=>{ls.style.display='none';document.body.classList.add('app-revealed');},400);
 }
-
-function toggleLoginTheme(){
-  const curr = document.documentElement.getAttribute('data-theme');
-  const next = curr==='dark'?'light':'dark';
-  document.documentElement.setAttribute('data-theme',next);
-  document.getElementById('loginThemeBtn').textContent = next==='dark'?'🌙':'☀️';
-  localStorage.setItem('wafa_theme',next);
-}
-
-// CSS shake keyframes injected here
-(()=>{
-  const s=document.createElement('style');
-  s.textContent='@keyframes loginShake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}';
-  document.head.appendChild(s);
-})();
 
 // ═══════════════════════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════════════════════
 window.addEventListener('load',()=>{
-  // restore theme
   const saved=localStorage.getItem('wafa_theme')||'dark';
-  document.documentElement.setAttribute('data-theme',saved);
-  document.getElementById('themeBtn').textContent=saved==='dark'?'🌙':'☀️';
-  document.getElementById('loginThemeBtn').textContent=saved==='dark'?'🌙':'☀️';
+  if(saved==='light')document.body.classList.add('light');
+  document.getElementById('themeBtn').textContent=saved==='light'?'☀️':'🌙';
+  document.getElementById('loginThemeBtn').textContent=saved==='light'?'☀️':'🌙';
 
-  // check auth session
   if(sessionStorage.getItem('wafa_auth')==='1'){
     document.getElementById('login-screen').style.display='none';
     document.body.classList.add('app-revealed');
-  } else {
+  }else{
     document.getElementById('loginUser').focus();
   }
 
-  // set current date
   const now=new Date();
   document.getElementById('msel').value=now.getMonth()+1;
   document.getElementById('curDay').value=now.getDate();
 
-  // load plans from storage
   if(loadPlansFromStorage()){
     checkReady();
     showToast('✅ تم تحميل الخطط المحفوظة');
